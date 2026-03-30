@@ -1,0 +1,1035 @@
+[
+  {
+    "name": "Demam Berdarah (DBD)",
+    "cause": "Virus Dengue, nyamuk Aedes",
+    "symptoms": [
+      "demam tinggi",
+      "nyeri otot",
+      "bintik merah"
+    ],
+    "prevention": "Hindari gigitan nyamuk, bersihin genangan air",
+    "treatment": "minum banyak cairan, istirahat total"
+  },
+  {
+    "name": "Diabetes Melitus (DM)",
+    "cause": "Kekurangan insulin / resistensi insulin",
+    "symptoms": [
+      "sering haus",
+      "sering pipis",
+      "lemes"
+    ],
+    "prevention": "Kontrol gula darah, pola makan sehat, olahraga",
+    "treatment": "diet gula, olahraga teratur, menjaga berat badan ideal"
+  },
+  {
+    "name": "Hipertensi",
+    "cause": "Tekanan darah tinggi kronis",
+    "symptoms": [
+      "kepala pusing",
+      "mudah capek",
+      "kadang tanpa gejala"
+    ],
+    "prevention": "Kurangi garam, olahraga, kontrol stres",
+    "treatment": "kurangi garam, olahraga rutin, kelola setres "
+  },
+  {
+    "name": "Tuberkulosis (TBC)",
+    "cause": "Bakteri Mycobacterium tuberculosis",
+    "symptoms": [
+      "batuk lama >2 minggu",
+      "demam",
+      "berkeringat malam"
+    ],
+    "prevention": "Vaksin BCG, hindari kontak dengan penderita aktif",
+    "treatment": "kepatuhan obat, isolasi mandiri, ventilasi ruangan"
+  },
+  {
+    "name": "HIV/AIDS",
+    "cause": "Virus HIV",
+    "symptoms": [
+      "berat badan turun drastis",
+      "sering infeksi"
+    ],
+    "prevention": "Hindari jarum suntik bersama, safe sex",
+    "treatment": "kedisiplinan minum obat, menjaga kebersihan dan kesehatan mental "
+  },
+  {
+    "name": "Malaria",
+    "cause": "Plasmodium (nyamuk Anopheles)",
+    "symptoms": [
+      "demam",
+      "menggigil",
+      "berkeringat"
+    ],
+    "prevention": "Kelambu, obat profilaksis, basmi nyamuk",
+    "treatment": "istirahat total, nutrisi bergizi untuk pemulihan "
+  },
+  {
+    "name": "Flu / Influenza",
+    "cause": "Virus influenza",
+    "symptoms": [
+      "hidung mampet",
+      "batuk",
+      "demam ringan"
+    ],
+    "prevention": "Vaksin flu, cuci tangan, masker",
+    "treatment": "tidur maksimal, isolasi mandiri, hindari kafein dan alkohol "
+  },
+  {
+    "name": "Kanker",
+    "cause": "Mutasi sel abnormal",
+    "symptoms": [
+      "bergantung jenis",
+      "bisa benjolan",
+      "perdarahan abnormal"
+    ],
+    "prevention": "Hidup sehat, screening rutin",
+    "treatment": "kompres hangat pada area nyeri, makan dengan porsi kecil untuk mengatasi mual "
+  },
+  {
+    "name": "Asma",
+    "cause": "Inflamasi saluran napas, alergi",
+    "symptoms": [
+      "sesak napas",
+      "napas berbunyi",
+      "batuk"
+    ],
+    "prevention": "Hindari pemicu alergi, obat inhaler",
+    "treatment": "gunakan inhaler, tetap tenang, atur posisi duduk "
+  },
+  {
+    "name": "COVID-19",
+    "cause": "Virus SARS-CoV-2",
+    "symptoms": [
+      "demam",
+      "batuk",
+      "sesak napas",
+      "hilang penciuman"
+    ],
+    "prevention": "Vaksin, masker, cuci tangan",
+    "treatment": "isolasi di ruangan terpisah, menggunakan masker medis, menjaga jarak "
+  },
+  {
+    "name": "Polio ",
+    "cause": "infeksi virus polio",
+    "symptoms": [
+      "demam",
+      "kelelahan",
+      "nyeri otot",
+      "dan sakit tenggorokan"
+    ],
+    "prevention": "Melakukan imunisasi atau vaksinasi polio secara lengkap ",
+    "treatment": "istirahat total, fisioterapi ringan, perawatan nutrisi "
+  },
+  {
+    "name": "Herpes simplex mulut (oral)",
+    "cause": "virus herpes simplex ",
+    "symptoms": [
+      "lepuh di bibir",
+      "gusi",
+      "atau tenggorakan"
+    ],
+    "prevention": "tidak melakukan sentuhan fisik seperti ciuman, seks, dan berbagi barang pribadi",
+    "treatment": "kompres dingin, jaga kebersihan, gunakan pelembab bibir "
+  },
+  {
+    "name": "Herpes simplex kelamin (genital)",
+    "cause": "virus herpes simplex ",
+    "symptoms": [
+      "lepuh di area kelamin",
+      "anus",
+      "atau bokong"
+    ],
+    "prevention": "menghindari kontak langsung saat luka muncul, memakai kondom, dan tidak berganti pasangan",
+    "treatment": "menjaga area intim tetap kering, berendam air hangat, hindari iritasi "
+  },
+  {
+    "name": "variella (cacar air) ",
+    "cause": "virus varicella-zoster ",
+    "symptoms": [
+      "ruam gatal berisi cairan (vesikel)",
+      "demam",
+      "kelelahan"
+    ],
+    "prevention": "vaksinasi varisela, isolasi mandiri, hygiene, hindari kontak dengan orang-orang",
+    "treatment": "mandi air hangat, kompres dingin, gunakan pakaian longgar "
+  },
+  {
+    "name": "rabies ",
+    "cause": "virus rabies ",
+    "symptoms": [
+      "demam",
+      "kegelisahan",
+      "kejang",
+      "dan kesulitan menelan"
+    ],
+    "prevention": "menghindari kontak dengan hewan liar, segera mencuci luka gigitan dengan sabun dan air mengalir selama 15 menit",
+    "treatment": "mencuci luka dengan sabun, gunakan antiseptik "
+  },
+  {
+    "name": "Ebola ",
+    "cause": "virus ebola",
+    "symptoms": [
+      "demam",
+      "nyeri otot",
+      "dan kelelahan"
+    ],
+    "prevention": "menghindari kontak langsung dengan darah, cairan tubuh, mempraktikkan kebersihan tangan",
+    "treatment": "tempatkan pasien diruangan terpisah, batasi jumlah perawat "
+  },
+  {
+    "name": "muntaber",
+    "cause": "keracunan makanan/minuman yg mengandung bakteri",
+    "symptoms": [
+      "diare cair yang sering",
+      "mual",
+      "muntah"
+    ],
+    "prevention": "menjga asupan makanan, mencuci tangan secara teratur, menjaga kebersihan rumah ",
+    "treatment": "minum banyak cairan (air putih, oralit), makan makanan lunak "
+  },
+  {
+    "name": "tifus",
+    "cause": "bakteri salmonella",
+    "symptoms": [
+      "demam dengan suhu naik secara bertahap",
+      "sakit kepala",
+      "denyut jantung menurun"
+    ],
+    "prevention": "menjaga daya tahan tubuh, membersihkan luka dan segera mengobatinya, memastikan kebersihan bahan makanan",
+    "treatment": "istirahat total, tidur cukup, diet rendah serat "
+  },
+  {
+    "name": "campak ",
+    "cause": "virus golongan paramixovirus",
+    "symptoms": [
+      "naiknya suhu tubuh",
+      "batuk",
+      "nyeri tenggorokan",
+      "nyeri otot",
+      "ruam pada kulit"
+    ],
+    "prevention": "melakukan vaksinasi ketika masih usia balita ",
+    "treatment": "konsumsi vitamin A, istirahat cukup, cegah dehidrasi"
+  },
+  {
+    "name": "Pneumonia ",
+    "cause": "bakteri, virus, parasit",
+    "symptoms": [
+      "demam",
+      "batuk",
+      "hingga mengalami sesak nafas"
+    ],
+    "prevention": "mengenakan masker apabila dekat dengan sumber risiko penularan pneumonia, menjaga daya tahan tubuh",
+    "treatment": "istirahat total, hidrasi yg cukup, konsumsi obat pereda gejala"
+  },
+  {
+    "name": "kolera",
+    "cause": "infeksi bakteri vibrio cholerae",
+    "symptoms": [
+      "diare cair parah",
+      "mual",
+      "muntah",
+      "dan kram perut"
+    ],
+    "prevention": "hindari memasak ikan, atau kerang setengah matang, sanitasi lingkungan yg baik ",
+    "treatment": "diet rendah lemak, kompres hangat, konsumsi obat pereda nyeri "
+  },
+  {
+    "name": "panu",
+    "cause": "pertumbuhan jamur malassezia secara berlebihan ",
+    "symptoms": [
+      "munculnya bercak-bercak putih",
+      "merasakan gatal ringan",
+      "bersisik halus"
+    ],
+    "prevention": "menghindari pemakaian handuk secara bergantian, menjemur handuk setelah dipakai, mencuci handuk minimal 1xseminggu ",
+    "treatment": "gunakan salep antijamur, sampo antijamur, dan jaga kebersihan diri "
+  },
+  {
+    "name": "malaria",
+    "cause": "infeksi parasit plasmodium ",
+    "symptoms": [
+      "demam tinggi",
+      "menggigil",
+      "nyeri bagian tubuh",
+      "dan muntah-muntah"
+    ],
+    "prevention": "menghindari gigitan nyamuk",
+    "treatment": "konsumsi obat antimalaria, konsumsi paracetamol, cegah penularan "
+  },
+  {
+    "name": "cacingan ",
+    "cause": "infeksi parasit, jarang cuci tangan, konsumsi makanan/ air mentah ",
+    "symptoms": [
+      "ditemukan cacing pada tubuh"
+    ],
+    "prevention": "menjaga keberishan diri sendiri dan lingkungan, mencuci tangan dengan baik, memastikan kebersihan makanan ",
+    "treatment": "konsumsi obat cacingan, jaga kebersihan diri, potong kuku "
+  },
+  {
+    "name": "Demam Tifoid",
+    "cause": "Bakteri Sallmonella typhi dari makanan/minuman kotor",
+    "symptoms": [
+      "demam tinggi",
+      "sakit perut",
+      "lemaah",
+      "diare"
+    ],
+    "prevention": "Mencuci tangan, makan-makanan bersih",
+    "treatment": "istirahat cukup, hindari aktifitas berat, makan makanan lunak "
+  },
+  {
+    "name": "Leptospirosis",
+    "cause": "Bakteri dari air yang tercemar urin tikus",
+    "symptoms": [
+      "demam",
+      "sakit kepala",
+      "nyeri otot"
+    ],
+    "prevention": "Menghindari air kotor, menjaga kebersihan lingkungan",
+    "treatment": "istirahat total, konsumsi paracetamol, gunakan kompres hangat "
+  },
+  {
+    "name": "Difteri",
+    "cause": "Bakteri Corynebacterium diphtheriae",
+    "symptoms": [
+      "sakit tenggorokan",
+      "demam",
+      "sulit bernapas"
+    ],
+    "prevention": "Imunisasi DPT, menjaga kebersihan",
+    "treatment": "isolasi mandiri, istirahat total, makan makanan lunak "
+  },
+  {
+    "name": "Pertusis",
+    "cause": "Bakteri Bordetella pertussis",
+    "symptoms": [
+      "batuk keras terus-menerus",
+      "sesak napas"
+    ],
+    "prevention": "Vaksinasi, menjaga jarak dengan penderita",
+    "treatment": "istirahat cukup, asupan cairan tercukupi, mandi air hangat "
+  },
+  {
+    "name": "Meningitis",
+    "cause": "Infeksi bakteri atau virus pada selaput otak",
+    "symptoms": [
+      "demam tinggi",
+      "sakit kepala",
+      "kaku leher"
+    ],
+    "prevention": "Vaksin meningitis, menjaga kesehatan",
+    "treatment": "istirahat yg cukup, kurangi kebisingan, konsumsi obat pereda nyeri "
+  },
+  {
+    "name": "Rubella",
+    "cause": "Virus rubella",
+    "symptoms": [
+      "ruam merah",
+      "demam ringan",
+      "sakit kepala"
+    ],
+    "prevention": "Imunisasi MR, menjaga daya tahan tubuh",
+    "treatment": "Istirahat cukup, cairan tubuh yang cukup, dan penggunaan antiperitik (seperti paracetamol) untuk menurunkan demam dan nyeri"
+  },
+  {
+    "name": "Gondongan",
+    "cause": "Virus yang menyerang kelenjar ludah",
+    "symptoms": [
+      "bengkak di pipi",
+      "demam ringan",
+      "sakit kepala"
+    ],
+    "prevention": "Vaksin MMR, menjaga kebersihan",
+    "treatment": "istirahat cukup, kompres dingin/hangat pada bengkak, dan konsumsi makanan lunak"
+  },
+  {
+    "name": "Stroke",
+    "cause": "Gangguan aliran darah ke otak",
+    "symptoms": [
+      "lumpuh mendadak",
+      "sulit bicara",
+      "pusing"
+    ],
+    "prevention": "Pola hidup sehat, kontrol tekanan darah",
+    "treatment": "Istirahat total, segera ke rumah sakit, konsumsi obat sesuai anjuran dokter, lakukan fisoterapi, jaga pola makan sehat, dan kontrol rutin untuk mencegah kambuh"
+  },
+  {
+    "name": "Gagal Ginjal",
+    "cause": "Kerusakan ginjal akibat penyakit atau racun",
+    "symptoms": [
+      "bengkak",
+      "lelah",
+      "buang air kecil sedikit"
+    ],
+    "prevention": "Minum air cukup, pola hidup sehat",
+    "treatment": "kombinasi perubahan gaya hidup, diet ketat, obat-obatan,dan terapi pengganti ginjal seperti cuci darah (dialisis) atau transplantasi "
+  },
+  {
+    "name": "Anemia",
+    "cause": "Kekurangan zat besi atau darah",
+    "symptoms": [
+      "pucat",
+      "lelah",
+      "pusing"
+    ],
+    "prevention": "Makan makanan kaya zat besi",
+    "treatment": "meningkatkan asupan zat besi,asam folat, dan vitamin B12 melalui makanan"
+  },
+  {
+    "name": "Sinusitis",
+    "cause": "Infeksi atau alergi pada sinus",
+    "symptoms": [
+      "hidung tersumbat",
+      "sakit kepala",
+      "nyeri wajah"
+    ],
+    "prevention": "Menjaga kebersihan hidung, hindari alergi",
+    "treatment": "istirahat yang cukup, minum banyak air, cuci hidung dengan larutan saline (neti pot), dan hirup uap hangat"
+  },
+  {
+    "name": "Chikungunya",
+    "cause": "Virus chikungunya yang ditularkan nyamuk",
+    "symptoms": [
+      "demam tinggi",
+      "nyeri sendi",
+      "sakit kepala"
+    ],
+    "prevention": "Menghindari gigitan nyamuk, menjaga kebersihan lingkungan",
+    "treatment": "istirahat cukup, minum banyak cairan dan konsumsi parasetamol untuk demam/nyeri"
+  },
+  {
+    "name": "Zika",
+    "cause": "Virus zika dari gigitan nyamuk",
+    "symptoms": [
+      "demam ringan",
+      "ruam kulit",
+      "nyeri sendi"
+    ],
+    "prevention": "Menggunakan obat nyamuk, menjaga lingkungan",
+    "treatment": "istirahat cukup, minum banyak cairan,dan mengonsumsi parasetamol untuk demam/nyeri, serta menghindari aspirin"
+  },
+  {
+    "name": "Tetanus",
+    "cause": "Bakteri Clostridium tetani dari luka kotor",
+    "symptoms": [
+      "kejang otot",
+      "kaku rahang"
+    ],
+    "prevention": "Vaksin tetanus, membersihkan luka",
+    "treatment": "Pemberian antitoksin, antibiotik, perawatan luka, dan vaksinasi"
+  },
+  {
+    "name": "Penyakit Jantung Koroner",
+    "cause": "Penyumbatan pembuluh darah jantung",
+    "symptoms": [
+      "nyeri dada",
+      "sesak napas"
+    ],
+    "prevention": "Pola makan sehat, olahraga",
+    "treatment": "Obat jantung, pola hidup sehat, olahraga, dan tindakan medis (stent/operasi)"
+  },
+  {
+    "name": "Osteoporosis",
+    "cause": "Kekurangan kalsium atau penuaan",
+    "symptoms": [
+      "tulang mudah patah",
+      "nyeri punggung"
+    ],
+    "prevention": "Konsumsi kalsium, olahraga",
+    "treatment": "Konsumsi kalsium & vitamin D, olahraga, dan obat penguat tulang"
+  },
+  {
+    "name": "Arthritis",
+    "cause": "Peradangan pada sendi",
+    "symptoms": [
+      "nyeri sendi",
+      "bengkak",
+      "kaku"
+    ],
+    "prevention": "Menjaga berat badan, olahraga ringan",
+    "treatment": "Obat anti nyeri, fisioterapi, istirahat, dan kompres hangat/dingin"
+  },
+  {
+    "name": "Epilepsi",
+    "cause": "Gangguan aktivitas listrik otak",
+    "symptoms": [
+      "kejang",
+      "kehilangan kesadaran"
+    ],
+    "prevention": "Menghindari pemicu, pengobatan rutin",
+    "treatment": "Obat anti kejang rutin, hindari pemicu, dan kontrol ke dokter"
+  },
+  {
+    "name": "Migrain",
+    "cause": "Gangguan saraf atau stres",
+    "symptoms": [
+      "sakit kepala netar",
+      "mual"
+    ],
+    "prevention": "Istirahat cukup, menghindari stres",
+    "treatment": "Istirahat, obat pereda nyeri, hindari pemicu, dan cukup tidur"
+  },
+  {
+    "name": "Gastritis",
+    "cause": "Infeksi bakteri atau pola makan tidak teratur",
+    "symptoms": [
+      "nyeri perut",
+      "mual",
+      "perut kembung"
+    ],
+    "prevention": "Makan teratur, hindari makanan pedas",
+    "treatment": "Obat lambung, makan teratur, hindari makan pedas/asam, dan kelola stres"
+  },
+  {
+    "name": "GERD",
+    "cause": "Asam lambung naik ke kerongkongan",
+    "symptoms": [
+      "rasa terbakar di dada",
+      "mual"
+    ],
+    "prevention": "Makan porsi kecil, hindari makanan berlemak",
+    "treatment": "Obat penurun asam lambung, makan teratur, hindari makanan pemicu, dan tidak lansung berbaring setelah makan"
+  },
+  {
+    "name": "Psoriasis",
+    "cause": "Gangguan sistem imun",
+    "symptoms": [
+      "kulit merah",
+      "bersisik",
+      "gatal"
+    ],
+    "prevention": "Menjaga kesehatan kulit",
+    "treatment": "Salep/krim khusus, obat dokter, menjaga kelembapan kulit, dan hindari stres"
+  },
+  {
+    "name": "Influenza",
+    "cause": "Virus influenza tipe A, B, atau C ",
+    "symptoms": [
+      "demam tinggi",
+      "batuk kering",
+      "sakit tenggorokan",
+      "sakit kepala",
+      "nyeri otot/sendi",
+      "dan hidung tersumbat"
+    ],
+    "prevention": "Vaksinasi flu tahunan, mencuci tangan, dan menghindari kontak dengan orang sakit",
+    "treatment": "istirahat, minum banyak cairan, obat penurun demam, dan menjagadaya tahan tubuh"
+  },
+  {
+    "name": "Diare",
+    "cause": "Infeksi bakteri, virus, atau parasit melalui makanan/minuman yang terkontaminasi",
+    "symptoms": [
+      "buang air besar encer lebih dari 3 kali sehari",
+      "kram perut",
+      "mual",
+      "dan dehidrasi"
+    ],
+    "prevention": "Mencuci tangan sebelum makan, meminum air matang, dan menjaga kebersihan makanan",
+    "treatment": "Minum oralit, banyak cairan, makan ringan, dan obat sesuai anjuran dokter"
+  },
+  {
+    "name": "Scabies",
+    "cause": "Tungau pada kulit",
+    "symptoms": [
+      "gatal hebat terutama pada malam hari"
+    ],
+    "prevention": "Menjaga kebersihan tubuh dan pakaian",
+    "treatment": "Salep anti tungau, menjaga kebersihan tubuh, cuci pakaian/selimut, dan hindari kontak lansung"
+  },
+  {
+    "name": "Antraks",
+    "cause": "Bakteri Bacilllusanthracis dari hewan terinfeksi",
+    "symptoms": [
+      "demam",
+      "luka pada kulit",
+      "sesak napas"
+    ],
+    "prevention": "Hindari kontak dengan hewan yang terinfeksi",
+    "treatment": "menggunakan antibiotik (seperti ciprofloxacin, doxyycycline, atau penisilin) dan antitoksin"
+  },
+  {
+    "name": "Bronkitis",
+    "cause": "Infeksi virus atau bakteri pada saluran pernapasan",
+    "symptoms": [
+      "batuk berdahak",
+      "sesak napas"
+    ],
+    "prevention": "Menghindari asap rokok",
+    "treatment": "istirahat cukup, minum banyak cairan, dan penggunaan pereda nyeri seperti paracetamol atau ibuprofen"
+  },
+  {
+    "name": "Konjungtivis",
+    "cause": "infeksi virus (paling sering), bakteri, reaksi alergi,atau iritasi bahan kimia/benda asing",
+    "symptoms": [
+      "demam",
+      "batuk",
+      "sesak napas"
+    ],
+    "prevention": "Vaksin,menjaga daya tahan tubuh",
+    "treatment": "menjaga kebersihan mata, kompres dingin/hangat, dan menggunakan tetes mata pelumas"
+  },
+  {
+    "name": "Hemoroid",
+    "cause": "Pembengkakan pembulu darah di anus",
+    "symptoms": [
+      "nyeri saat buang air besar",
+      "pendarahan"
+    ],
+    "prevention": "makan-makanan berserat",
+    "treatment": "perbanyak serat ( buah/sayur), minum banyak air, hindari mengejan, berendam air hangat (sitz bath)"
+  },
+  {
+    "name": "Apendistis",
+    "cause": "Peradangan pada usus buntu",
+    "symptoms": [
+      "nyeri perut kanan bawah",
+      "mual"
+    ],
+    "prevention": "Menjaga pola makan sehat",
+    "treatment": "Operasi pengangkatan usus buntu (Apendektomi), baik melalui bedah terbuka maupun laparoskopi"
+  },
+  {
+    "name": "Vertigo",
+    "cause": "Gangguan pada telinga dalam atau saraf",
+    "symptoms": [
+      "pusing berputar",
+      "mual"
+    ],
+    "prevention": "Istirahat cukup,hindari stres",
+    "treatment": "Obat anti vertigo (seperti Betahistine), terapi rehatibilitas vestibular, atau manuver Epley"
+  },
+  {
+    "name": "Kanker kulit",
+    "cause": "Paparan sinar matahari berlebih",
+    "symptoms": [
+      "perubahan pada kulit",
+      "muncul benjolan"
+    ],
+    "prevention": "Menggunakan sunscreen, menghindari sinar matahari berlebih",
+    "treatment": "Krioterapi (pembekuan), terapi radiasi, kemoter, atau imunoeterapi tergantung stadium"
+  },
+  {
+    "name": "Batu ginjal",
+    "cause": "Penumpukan mineral di ginjal",
+    "symptoms": [
+      "nyeri pinggang",
+      "nyeri saat buang air kecil"
+    ],
+    "prevention": "minum air yang cukup",
+    "treatment": "minum air putih (2-3 liter/hari), mengonsumsi obat pereda nyeri/penghancur batu (seperti tamsulosin), serta prosedur medis seperti ESWL  (gelombang kejut), Ureteroskopi (laser), atau PCNL (operasi kecil) untuk batu besar"
+  },
+  {
+    "name": "Radang tenggorokan ",
+    "cause": "Infeksi virus atau bakteri ",
+    "symptoms": [
+      "sakit tenggorokan",
+      "demam",
+      "sulit menelan"
+    ],
+    "prevention": "Menjaga kebersihan dan daya tahan tubuh",
+    "treatment": "meningkatkan asupan cairan (air putih hangat), berkumur air garam, mengonsumsi madu, dan beristirahat cukup"
+  },
+  {
+    "name": "Katarak",
+    "cause": "Penuaan atau kerusakan pada lensa mata",
+    "symptoms": [
+      "penglihatan kabur",
+      "sensitif terhadap cahaya"
+    ],
+    "prevention": "Melindungi mata dari sinar UV",
+    "treatment": "prosedur bedah untuk mengangkat lensa yang keruh dan menggantinya dengan lensa intraokular (IOL)"
+  },
+  {
+    "name": "Asam Urat ",
+    "cause": "Penumpukan asam urat dalam darah",
+    "symptoms": [
+      "nyeri sendi",
+      "bengkak"
+    ],
+    "prevention": "Menghindari makanan tinggi purin",
+    "treatment": "kombinasi perubahan gaya hidup, pola makan , dan obat-obatan"
+  },
+  {
+    "name": "Sembelit",
+    "cause": "Kurang serat dan cairan",
+    "symptoms": [
+      "sulit bab",
+      "perut kembung"
+    ],
+    "prevention": "Makan serat, minum air cukup",
+    "treatment": "mengkatkan asupan serat (sayur, buah), minum cukup air ( minimal 2 liter/hari), dan berolahraga rutin"
+  },
+  {
+    "name": "Disentri",
+    "cause": "Bakteri atau parasit",
+    "symptoms": [
+      "bab cair",
+      "lemas"
+    ],
+    "prevention": "Menjaga kebersihan makanan",
+    "treatment": "minum banyak cairan (oralit), istirahat cukup, dan konsumsi antibiotik atau antiparasit sesuai resep dokter"
+  },
+  {
+    "name": "Keracunan makanan",
+    "cause": "Makanan terkontaminasi",
+    "symptoms": [
+      "mual",
+      "muntah",
+      "diare"
+    ],
+    "prevention": "Makan makanan bersih",
+    "treatment": "mencegah dehidrasi dengan minum banyak cairan (air putih, oralit, air kelapa,) secara bertahap"
+  },
+  {
+    "name": "SARS",
+    "cause": "Virus corona",
+    "symptoms": [
+      "demam",
+      "batuk",
+      "sesak"
+    ],
+    "prevention": "Pakai masker, jaga kebersihan",
+    "treatment": "berfokus pada isolasi pasien di rumah sakit dan peredaan gejala, karena belum ada pengobatan antivirus spesifik"
+  },
+  {
+    "name": "Demam kuning",
+    "cause": "Virus dari nyamuk",
+    "symptoms": [
+      "demam",
+      "sakit kepala",
+      "mual"
+    ],
+    "prevention": "Vaksin, hindari gigitan nyamuk",
+    "treatment": "berfokus pada terapi suportif di rumah sakit untuk meredakan gejala, mencegah dehidrasi, dan menangani komplikasi"
+  },
+  {
+    "name": "Filairasis",
+    "cause": "Cacing filaria dari nyamuk",
+    "symptoms": [
+      "pembengkakan kaki/tangan"
+    ],
+    "prevention": "Hindari gigitan nyamuk",
+    "treatment": "Obat antiparasit seperti Dietilkarbamazin (DEC), dikombinasikan dengan albendazole atau ivermectin"
+  },
+  {
+    "name": "Trakoma",
+    "cause": "Infeksi bakteri pada mata",
+    "symptoms": [
+      "mata merah iritasi"
+    ],
+    "prevention": "Menjaga kebersihan wajah",
+    "treatment": "berfokus pada strategi SAFE (surgery, Antiniotics,facial cleanliness, environmental improvement) yang direkomendasikan WHO"
+  },
+  {
+    "name": "Blefaritis",
+    "cause": "Infeksi atau iritasi",
+    "symptoms": [
+      "kelopak mata bengkak",
+      "gatal"
+    ],
+    "prevention": "Menjaga kebersihan mata",
+    "treatment": "menjaga kebersihan kelopak mata melalui kompres hangat untuk melunakkan kerak, diikuti pembersihan tepi kelopak mata menggunakan sampo bayi yang diencerkan atau larutan pembersih khusus"
+  },
+  {
+    "name": "Urtikaria",
+    "cause": "Reaksi alergi",
+    "symptoms": [
+      "bentol merah",
+      "gatal"
+    ],
+    "prevention": "Hindari pemicu alergi",
+    "treatment": "hindari pemicu alergi , konsumsi antihistamin untuk gatal, dan jika parah, gunakan obat dari dokter"
+  },
+  {
+    "name": "Eksim",
+    "cause": "Alergi atau iritasi",
+    "symptoms": [
+      "kulit kering",
+      "gatal"
+    ],
+    "prevention": "Gunakan pelembap",
+    "treatment": "pakai pelembap rutin, krim kortikosteroid, hindari pemicu (seperti iritan ), dan rutin kontrol ke dokter"
+  },
+  {
+    "name": "Lupus",
+    "cause": "Sistem imun menyerang tubuh sendiri",
+    "symptoms": [
+      "lelah",
+      "nyeri sendi"
+    ],
+    "prevention": "Hindari stres, kontrol kesehatan",
+    "treatment": "gunakan obat imunosupresan, NSAID untuk nyeri, hindari sinar matahari, dan rutin kontrol ke dokter sambil jaga gaya hidup sehat"
+  },
+  {
+    "name": "Skoliosis",
+    "cause": "Kelainan tulang belakang",
+    "symptoms": [
+      "tulang belakang melengkung"
+    ],
+    "prevention": "Postur tubuh yang baik",
+    "treatment": "pantau rutin, fisioterapi, brace untuk stabilitas, dan operasi jika perlu"
+  },
+  {
+    "name": "Lordosis",
+    "cause": "Kelainan tulang belakang ",
+    "symptoms": [
+      "punggung membungkuk"
+    ],
+    "prevention": "Duduk tegak",
+    "treatment": "fisioterapi, latihan peregangan, brace, dan operasi jika perlu"
+  },
+  {
+    "name": "Hernia",
+    "cause": "Otot lemah",
+    "symptoms": [
+      "benjolan di perut"
+    ],
+    "prevention": "Hindari angkat berat",
+    "treatment": "ubah gaya hidup, obat nyeri, dan operasi jika perlu untuk perbaikan "
+  },
+  {
+    "name": "Varises",
+    "cause": "Gangguan pembulu darah",
+    "symptoms": [
+      "pembuluh menonjol"
+    ],
+    "prevention": "Hindari berdiri lama",
+    "treatment": "gunakan kaus kompresi, rutin berolahraga, jaga berat badan, dan jika parah, lakukan skleroterapi atau operasi"
+  },
+  {
+    "name": "Hipotensi",
+    "cause": "Tekanan darah rendah",
+    "symptoms": [
+      "pusing",
+      "lemas"
+    ],
+    "prevention": "Minum cukup air",
+    "treatment": "minuman air cukup, konsumsi garam, bangun pelan, dan konsultasi dokter jika di perlukan"
+  },
+  {
+    "name": "Heatstroke",
+    "cause": "Paparan panas berlebihan",
+    "symptoms": [
+      "pusing",
+      "suhu tubuh tinggi"
+    ],
+    "prevention": "Hindari panas berlebih",
+    "treatment": "pindah ke tempat sejuk, kompres dingin, minum cairan, dan segera ke dokter jika gejala parah"
+  },
+  {
+    "name": "Dehidrasi",
+    "cause": "Kekurangan cairan",
+    "symptoms": [
+      "haus",
+      "lemas"
+    ],
+    "prevention": "Minum air cukup",
+    "treatment": "minum banyak cairan,elektrolit jika perlu, dan istirahat"
+  },
+  {
+    "name": "PCOS",
+    "cause": "Gangguan hormon",
+    "symptoms": [
+      "haid tidak teratur"
+    ],
+    "prevention": "Pola hidup sehat",
+    "treatment": "atur pola makan, rutin olahraga, obat untuk mengatur hormon, dan jika perlu, konsultasi ke dokter untuk terapi kesuburan "
+  },
+  {
+    "name": "Protatitis",
+    "cause": "Infeksi atau peradangan",
+    "symptoms": [
+      "nyeri saat buang air kecil"
+    ],
+    "prevention": "Menjaga kebersihan",
+    "treatment": "obat antibiotik, antiinflamasi, dan pengelolaan nyeri"
+  },
+  {
+    "name": "Impetigo",
+    "cause": "Infeksi bakteri kulit",
+    "symptoms": [
+      "luka bernanah"
+    ],
+    "prevention": "Menjaga kebersihan",
+    "treatment": "antibiotik topikal atau oral, serta menjaga kebersihan kulit"
+  },
+  {
+    "name": "Insomnia",
+    "cause": "Stres atau pola tidur buruk",
+    "symptoms": [
+      "sulit tidur"
+    ],
+    "prevention": "Jadwal tidur teratur",
+    "treatment": "atur pola tidur, relaksasi, dan jika perlu, obat dari dokter"
+  },
+  {
+    "name": "Depresi",
+    "cause": "Faktor psikologis",
+    "symptoms": [
+      "sedih berkepanjangan"
+    ],
+    "prevention": "Dukungan sosial",
+    "treatment": "terapi psikologis, obata antidepresan, dan dukungan sosial"
+  },
+  {
+    "name": "ADHD",
+    "cause": "Gangguan perkembangan otak",
+    "symptoms": [
+      "sulit fokus",
+      "hiperaktif"
+    ],
+    "prevention": "Pendampingan dan terapi",
+    "treatment": "terapi perilaku, obat stimulasi, dan dukungan akademik "
+  },
+  {
+    "name": "Gangguan kecemasan",
+    "cause": "Stres berlebihan",
+    "symptoms": [
+      "gelisah",
+      "takut"
+    ],
+    "prevention": "Kelola stres",
+    "treatment": "terapi kognitif, relaksasi, dan obat jika diperlulan"
+  },
+  {
+    "name": "Alergi makanan",
+    "cause": "Reaksi sistem imun terhadap makanan tertentu",
+    "symptoms": [
+      "gtal",
+      "bengkak",
+      "mual"
+    ],
+    "prevention": "Hindari makanan pemicu",
+    "treatment": "hindari pemicu, obat antihistamin, dan epinefrin jika parah"
+  },
+  {
+    "name": "Alergi debu",
+    "cause": "Paparan debu",
+    "symptoms": [
+      "bersin",
+      "hidung tersumbat"
+    ],
+    "prevention": "Membersihkan rumah rutin",
+    "treatment": "hindari debu, pakai antihistamin, dan jaga kebersihan rumah"
+  },
+  {
+    "name": "Alergi dingin",
+    "cause": "Reaksi terhadap suhu dingin",
+    "symptoms": [
+      "bentol",
+      "gatal"
+    ],
+    "prevention": "Hindari suhu dingin",
+    "treatment": "hindari paparan dingin, pakai pakaian hangat, dan antihistamin "
+  },
+  {
+    "name": "Rhintis Alergi",
+    "cause": "Alergi seperti debu/serbuk sari",
+    "symptoms": [
+      "bersin",
+      "hidung meler"
+    ],
+    "prevention": "Hindari alergen",
+    "treatment": "hindari pemicu, gunakan antihistamin, dan semprot hidung saline"
+  },
+  {
+    "name": "Tonsilitis",
+    "cause": "Infeksi virus/bakteri",
+    "symptoms": [
+      "sakit tenggorokan",
+      "demam"
+    ],
+    "prevention": "Menjaga kebersihan",
+    "treatment": "antibiotik (jika bakteri), istirahat, dan kadang operasi tonsil"
+  },
+  {
+    "name": "Adenoidtis",
+    "cause": "Infeksi ppada adenoid",
+    "symptoms": [
+      "hidung tersumbat",
+      "sulit napas"
+    ],
+    "prevention": "menjaga daya tahan tubuh",
+    "treatment": "obat untuk infeksi, istirahat, dan perawatan di rumah "
+  },
+  {
+    "name": "Hiperkalemia",
+    "cause": "Kadar kalium tinggi",
+    "symptoms": [
+      "lemah",
+      "kram otot"
+    ],
+    "prevention": "Konsumsi makanan bergizi",
+    "treatment": "atur asupan kalium, obat diuretik, dan pemantauan elektrolit"
+  },
+  {
+    "name": "Pankreatitis",
+    "cause": "Peradangan pankreas",
+    "symptoms": [
+      "nyeri perut",
+      "mual"
+    ],
+    "prevention": "Hindari alkohol",
+    "treatment": "rawat di rumah sakit, istirahat, dan atur pola makan"
+  },
+  {
+    "name": "Fobia",
+    "cause": "Ketakutan berlebihan",
+    "symptoms": [
+      "panik",
+      "cemas"
+    ],
+    "prevention": "Terapi",
+    "treatment": "terapi perilaku, konseling, kadang obat anti kecemasan"
+  },
+  {
+    "name": "Dislokasi",
+    "cause": "Cedera sendi",
+    "symptoms": [
+      "nyeri",
+      "bengkak"
+    ],
+    "prevention": "Hati-hati aktivitas",
+    "treatment": "reposisi sendi , istirahat, dan terapi fisik"
+  },
+  {
+    "name": "Sirosis hati",
+    "cause": "Kerusakan hati kronis",
+    "symptoms": [
+      "perut bengkak",
+      "lelah"
+    ],
+    "prevention": "Hindari alkohol",
+    "treatment": "hentikan alkohol, obat untuk komplikasi, dan pemantauan rutin"
+  },
+  {
+    "name": "Wasir",
+    "cause": "Pembuluh darah anus bengkak",
+    "symptoms": [
+      "nyeri saat bab"
+    ],
+    "prevention": "Makan serat",
+    "treatment": "perubahan pola makan, obat topikal, dan prosedur jika parah"
+  },
+  {
+    "name": "Polip usus",
+    "cause": "Pertumbuhan jaringan abnormal",
+    "symptoms": [
+      "nyeri saat bab berdarah"
+    ],
+    "prevention": "Pola makan sehat",
+    "treatment": "pengangkatan polip, pemantauan, dan pemeriksaan rutin "
+  },
+  {
+    "name": "Kolitis",
+    "cause": "Peradangan usus besar",
+    "symptoms": [
+      "diare",
+      "nyeri perut"
+    ],
+    "prevention": "Menjaga pola makan",
+    "treatment": "obat anti inflamasi, perubahan diet, dan terapi sesuai penyebapnya"
+  }
+]

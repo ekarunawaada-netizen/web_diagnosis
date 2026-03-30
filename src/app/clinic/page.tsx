@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const ClinicMap = dynamic(() => import('@/components/ClinicMap'), { 
+  ssr: false,
+  loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400 font-headline">Memuat Radar Klinik...</div>
+});
 
 const clinics = [
   {
@@ -11,6 +17,8 @@ const clinics = [
     address: 'Jl. Jend. Sudirman No. 45, Jakarta Pusat',
     rating: 4.8,
     distance: '1.2 km',
+    lat: -6.2146,
+    lng: 106.8166,
     tags: ['Umum', 'Laboratorium', 'Vaksinasi'],
     badge: 'REKOMENDASI',
     badgeStyle: 'bg-secondary-container text-on-secondary-container',
@@ -21,6 +29,8 @@ const clinics = [
     address: 'Jl. MH Thamrin No. 12, Jakarta Pusat',
     rating: 4.5,
     distance: '2.4 km',
+    lat: -6.1866,
+    lng: 106.8228,
     tags: ['Gigi', 'Radiologi'],
     badge: 'Buka Sekarang',
     badgeStyle: '',
@@ -32,6 +42,8 @@ const clinics = [
     address: 'Mampang Prapatan, Jakarta Selatan',
     rating: 4.9,
     distance: '3.1 km',
+    lat: -6.2442,
+    lng: 106.8266,
     tags: ['Pediatri', 'Obstetri'],
   },
   {
@@ -40,6 +52,8 @@ const clinics = [
     address: 'Kebayoran Baru, Jakarta Selatan',
     rating: 4.4,
     distance: '4.5 km',
+    lat: -6.2367,
+    lng: 106.7931,
     tags: ['BPJS', 'Umum'],
     badge: 'Faskes Tingkat 1',
     badgeStyle: 'bg-tertiary-container text-tertiary',
@@ -71,13 +85,16 @@ export default function ClinicPage() {
       (position) => {
         setIsTracking(false);
         const { latitude, longitude } = position.coords;
-        setUserLocation({ lat: latitude, lng: longitude });
+        const newUserLoc = { lat: latitude, lng: longitude };
+        setUserLocation(newUserLoc);
 
         // Ubah mode peta menjadi "Eksplorasi Bebas" berdasar titik GPS aktual
         setSelectedClinic({
           id: 'geo_live',
           name: 'Pusat GPS Anda',
           address: `Koordinat [${latitude.toFixed(4)}, ${longitude.toFixed(4)}]`,
+          lat: latitude,
+          lng: longitude,
           rating: 'N/A',
           distance: '0 km',
           tags: ['Live Tracking', 'Radius Terdekat'],
@@ -91,12 +108,6 @@ export default function ClinicPage() {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
-
-  // Menentukan sumber url peta sesuai mode yang dipilih (Klinik spesifik atau pelacakan Area Sekitar)
-  const mapSourceUrl =
-    selectedClinic.isGeoTarget && userLocation
-      ? `https://maps.google.com/maps?q=rumah+sakit+terdekat+di+sekitar+${userLocation.lat},${userLocation.lng}&z=15&output=embed`
-      : `https://maps.google.com/maps?q=${encodeURIComponent(selectedClinic.name + ' ' + selectedClinic.address)}&t=m&z=15&ie=UTF8&iwloc=&output=embed`;
 
   return (
     <>
@@ -222,40 +233,19 @@ export default function ClinicPage() {
           </footer>
         </aside>
 
-        {/* Map View Real Google Maps Embed */}
-        <section className="flex-1 relative bg-slate-200 hidden md:block">
-          <iframe
-            title={`Peta Lokasi ${selectedClinic.name}`}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            loading={selectedClinic.isGeoTarget ? "eager" : "lazy"}
-            allowFullScreen
-            src={mapSourceUrl}
-          ></iframe>
+        {/* Map View - Interactive Leaflet Radar */}
+        <section className="flex-1 relative bg-slate-100 hidden md:block z-10">
+          <ClinicMap 
+            clinics={clinics} 
+            userLocation={userLocation} 
+            selectedClinic={selectedClinic} 
+          />
 
-          {/* Floating Info Marker over map */}
-          {!isTracking && (
-            <div className="absolute top-6 left-6 w-80 bg-white/90 backdrop-blur pointer-events-none p-5 rounded-2xl shadow-2xl border border-white animate-in zoom-in-95 fade-in duration-700">
-              <div className="flex items-center gap-4 mb-3">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${selectedClinic.isGeoTarget ? 'bg-tertiary/10 text-tertiary border-tertiary/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    {selectedClinic.isGeoTarget ? 'radar' : 'home_health'}
-                  </span>
-                </div>
-                <div>
-                  <p className={`text-[10px] font-black uppercase tracking-widest leading-none mb-1 ${selectedClinic.isGeoTarget ? 'text-tertiary' : 'text-primary'}`}>
-                    {selectedClinic.isGeoTarget ? 'Radar Satelit Aktual' : 'Lokasi Disorot'}
-                  </p>
-                  <h4 className="font-bold text-on-surface leading-tight text-sm shadow-sm line-clamp-2">{selectedClinic.name}</h4>
-                </div>
-              </div>
-              <p className="text-xs text-on-surface-variant leading-relaxed">
-                {selectedClinic.isGeoTarget
-                  ? `Peramban Anda mengekspos koordinat Anda dan Google kini mencarikan pusat layanan terdekat di bujur ${userLocation?.lng.toFixed(4)}.`
-                  : `Navigasi GPS terhubung seketika (${selectedClinic.distance} dari pusat). Data lokasi klinik ditarik tepat dari koordinat direktori satelit.`
-                }
-              </p>
+          {/* Radar Status Indicator */}
+          {selectedClinic.isGeoTarget && (
+            <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-blue-100 flex items-center gap-2 z-30 animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Scanning Area...</span>
             </div>
           )}
         </section>

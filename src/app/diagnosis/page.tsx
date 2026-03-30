@@ -1,32 +1,73 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
-import { useState } from 'react';
+import Footer from '@/components/Footer';
+import MedicalDisclaimer from '@/components/MedicalDisclaimer';
+import diseasesData from '@/data/diseases.json';
 
-const symptoms = [
-  { id: 'demam', name: 'Demam', icon: 'thermostat' },
-  { id: 'batuk', name: 'Batuk', icon: 'coronavirus' },
-  { id: 'pusing', name: 'Pusing', icon: 'psychology' },
-  { id: 'sesak', name: 'Sesak Napas', icon: 'airwave' },
-  { id: 'mual', name: 'Mual', icon: 'gastroenterology' },
-  { id: 'nyeri', name: 'Nyeri Sendi', icon: 'personal_injury' },
-];
+interface Symptom {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
+// Icon mapping for common symptoms
+const iconMap: Record<string, string> = {
+  'demam': 'thermostat',
+  'batuk': 'air',
+  'pusing': 'psychology',
+  'mual': 'sick',
+  'lemas': 'moped',
+  'sesak napas': 'lungs',
+  'nyeri dada': 'heart_broken',
+  'sakit tenggorokan': 'voice_over_off',
+  'diare': 'water_drop',
+  'gatal': 'pan_tool_alt',
+};
 
 export default function DiagnosisPage() {
-  const [selected, setSelected] = useState<string[]>(['demam']);
+  const [selected, setSelected] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const toggle = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
+  // Extract all unique symptoms from database
+  const allSymptoms = useMemo(() => {
+    const symptomsSet = new Set<string>();
+    diseasesData.forEach((disease: any) => {
+      disease.symptoms.forEach((s: string) => symptomsSet.add(s.toLowerCase()));
+    });
+    return Array.from(symptomsSet).sort().map(s => ({
+      id: s.replace(/\s+/g, '_'),
+      name: s.charAt(0).toUpperCase() + s.slice(1),
+      icon: iconMap[s.toLowerCase()] || 'medical_information'
+    }));
+  }, []);
+
+  // Featured symptoms for the grid
+  const featuredSymptoms = useMemo(() => {
+    const common = ['demam', 'batuk', 'pusing', 'mual', 'lemas', 'sesak napas', 'nyeri dada', 'sakit tenggorokan', 'diare', 'gatal'];
+    return allSymptoms.filter(s => common.includes(s.name.toLowerCase()));
+  }, [allSymptoms]);
+
+  const toggleSymptom = (symptom: Symptom) => {
+    if (selected.find(s => s.id === symptom.id)) {
+      setSelected(selected.filter(s => s.id !== symptom.id));
+    } else {
+      setSelected([...selected, { ...symptom, intensity: 2, duration: 3 }]);
+    }
   };
 
   const remove = (id: string) => {
-    setSelected((prev) => prev.filter((s) => s !== id));
+    setSelected((prev) => prev.filter((s) => s.id !== id));
   };
+
+  const updateDetail = (id: string, field: 'intensity' | 'duration', value: number) => {
+    setSelected((prev) => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
+  const filteredSuggestions = allSymptoms.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) && search.length > 0);
 
   const dataStrength = selected.length >= 3 ? 'Kuat' : selected.length >= 1 ? 'Sedang' : 'Lemah';
 
@@ -72,12 +113,12 @@ export default function DiagnosisPage() {
                 </h2>
                 {/* Symptoms Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-5">
-                  {symptoms.map((s) => {
-                    const isActive = selected.includes(s.id);
+                  {featuredSymptoms.map((s) => {
+                    const isActive = selected.some((sel) => sel.id === s.id);
                     return (
                       <div
                         key={s.id}
-                        onClick={() => toggle(s.id)}
+                        onClick={() => toggleSymptom(s)}
                         className={`group relative flex flex-col items-center p-6 rounded-2xl cursor-pointer transition-all duration-300 transform active:scale-95 border border-transparent ${
                           isActive
                             ? 'bg-gradient-to-br from-primary to-primary-container text-white shadow-[0_8px_20px_rgba(0,100,255,0.25)] border-primary hover:-translate-y-1'
@@ -110,8 +151,32 @@ export default function DiagnosisPage() {
                       placeholder="Ketik gejala kustom (mis: Mata berkunang, lemas...)"
                       type="text"
                       value={search}
-                      onChange={(e) => setSearch(e.target.value)}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     />
+                    {showSuggestions && filteredSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-2 bg-surface backdrop-blur-xl border border-outline-variant/30 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                        {filteredSuggestions.map((s) => (
+                          <div
+                            key={s.id}
+                            onClick={() => {
+                              if (!selected.some(sel => sel.id === s.id)) {
+                                setSelected([...selected, { ...s, intensity: 2, duration: 3 }]);
+                              }
+                              setSearch('');
+                              setShowSuggestions(false);
+                            }}
+                            className="px-6 py-4 hover:bg-primary/5 cursor-pointer transition-colors flex items-center gap-3 border-b border-outline-variant/10 last:border-0"
+                          >
+                            <span className="material-symbols-outlined text-primary text-xl">{s.icon}</span>
+                            <span className="font-medium text-on-surface">{s.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -140,15 +205,45 @@ export default function DiagnosisPage() {
                     {selected.length} AKTIF
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2 relative z-10 min-h-16">
-                  {selected.map((id) => {
-                    const symptom = symptoms.find((s) => s.id === id);
-                    return symptom ? (
-                      <div key={id} className="px-4 py-2 bg-on-surface text-surface rounded-xl flex items-center gap-2 text-sm font-bold shadow-md hover:-translate-y-0.5 transition-transform animate-in fade-in zoom-in">
-                        <span>{symptom.name}</span>
-                        <button onClick={() => remove(id)} className="material-symbols-outlined text-sm hover:text-error transition-colors bg-surface-container/20 rounded-full p-0.5">close</button>
+                <div className="flex flex-col gap-4 relative z-10 min-h-16">
+                  {selected.map((sel) => {
+                    const symptom = allSymptoms.find((s) => s.id === sel.id) || { name: sel.name || sel.id };
+                    return (
+                      <div key={sel.id} className="p-4 bg-on-surface/5 border border-outline-variant/20 rounded-2xl flex flex-col gap-3 transition-transform animate-in fade-in zoom-in">
+                        <div className="flex justify-between items-center">
+                           <div className="flex items-center gap-2">
+                             <span className="font-bold text-on-surface">{symptom.name}</span>
+                             <span className="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded uppercase">{sel.intensity === 1 ? 'Ringan' : sel.intensity === 2 ? 'Sedang' : 'Tinggi'}</span>
+                           </div>
+                           <button onClick={() => remove(sel.id)} className="material-symbols-outlined text-sm hover:text-error transition-colors bg-surface-container/20 rounded-full p-0.5">close</button>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-outline uppercase tracking-widest flex justify-between">
+                              Intensitas <span>{sel.intensity}/3</span>
+                            </label>
+                            <input 
+                              type="range" min="1" max="3" step="1" 
+                              value={sel.intensity} 
+                              onChange={(e) => updateDetail(sel.id, 'intensity', parseInt(e.target.value))}
+                              className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-outline uppercase tracking-widest flex justify-between">
+                              Durasi <span>{sel.duration} Hari</span>
+                            </label>
+                            <input 
+                              type="range" min="1" max="14" step="1" 
+                              value={sel.duration} 
+                              onChange={(e) => updateDetail(sel.id, 'duration', parseInt(e.target.value))}
+                              className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-secondary"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    ) : null;
+                    );
                   })}
                   {selected.length === 0 && (
                      <div className="w-full h-full border-2 border-dashed border-outline-variant/40 rounded-xl flex flex-col items-center justify-center p-6 text-outline">
@@ -173,7 +268,16 @@ export default function DiagnosisPage() {
                 </div>
 
                 <Link
-                  href={`/diagnosis/result?symptoms=${encodeURIComponent(JSON.stringify(selected))}`}
+                  href="/diagnosis/result"
+                  onClick={() => {
+                    localStorage.setItem('mediscan_last_diagnosis', JSON.stringify({
+                      symptoms: selected.map(s => {
+                        const sym = allSymptoms.find(sym => sym.id === s.id);
+                        return { id: s.id, name: sym ? sym.name : (s.name || s.id), intensity: s.intensity, duration: s.duration };
+                      }),
+                      timestamp: new Date().toISOString()
+                    }));
+                  }}
                   className={`relative overflow-hidden w-full mt-6 py-4 rounded-2xl font-headline font-black text-lg transition-all flex items-center justify-center gap-2 group/btn
                     ${selected.length === 0 
                       ? 'bg-surface-container-high text-outline pointer-events-none' 
@@ -202,7 +306,36 @@ export default function DiagnosisPage() {
             
           </div>
         </div>
+        
+        {/* Urgency Detection Overlay */}
+        {(selected.some(s => s.id === 'sesak') && selected.some(s => s.id === 'nyeri' || s.id === 'Nyeri Dada Mendadak')) && (
+          <div className="fixed inset-0 bg-error/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 animate-in fade-in duration-500">
+            <div className="max-w-md w-full bg-white rounded-[3rem] p-10 text-center shadow-2xl animate-in zoom-in duration-500 delay-300">
+              <div className="w-24 h-24 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <span className="material-symbols-outlined text-error text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+              </div>
+              <h2 className="text-3xl font-black text-on-surface mb-4 font-headline">DETEKSI BAHAYA!</h2>
+              <p className="text-on-surface-variant font-medium mb-10 leading-relaxed">
+                Kombinasi <strong>Sesak Napas</strong> dan <strong>Nyeri Dada</strong> menunjukkan risiko kondisi jantung atau paru yang sangat serius.
+              </p>
+              <div className="flex flex-col gap-4">
+                <a href="tel:112" className="w-full py-5 bg-error text-white rounded-2xl font-black text-xl flex items-center justify-center gap-3 shadow-xl shadow-error/30 hover:scale-[1.02] active:scale-95 transition-all">
+                  <span className="material-symbols-outlined">emergency</span> HUBUNGI 112
+                </a>
+                <button 
+                  onClick={() => remove('sesak')}
+                  className="w-full py-4 text-outline font-bold hover:text-on-surface transition-colors"
+                >
+                  Lambaikan & Tutup Peringatan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-12">
+        <MedicalDisclaimer />
+      </div>
       <Footer />
     </>
   );

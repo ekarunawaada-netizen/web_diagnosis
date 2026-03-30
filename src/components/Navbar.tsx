@@ -15,6 +15,7 @@ export default function Navbar() {
         <div className="hidden md:flex gap-8 items-center">
           <Link className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/">Beranda</Link>
           <Link className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/diagnosis">Diagnosis</Link>
+          <Link className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/history">Riwayat</Link>
           <Link className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/clinic">Cari Klinik</Link>
           <Link className="font-headline font-semibold tracking-tight text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/appointments">Janji Temu</Link>
         </div>
