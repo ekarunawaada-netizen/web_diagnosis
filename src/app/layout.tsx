@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/Providers";
-import PageLoader from "@/components/PageLoader";
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import Chatbot from '../components/Chatbot';
+import { Providers } from "../components/Providers";
+import PageLoader from "../components/PageLoader";
 
 const manrope = Manrope({ subsets: ["latin"], variable: '--font-manrope' });
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
@@ -26,6 +29,7 @@ export default function RootLayout({
         <PageLoader />
         <Providers>
           {children}
+          <Chatbot />
         </Providers>
       </body>
     </html>

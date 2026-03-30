@@ -1,13 +1,63 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+
+interface DiagnosisResult {
+  primaryCondition: {
+    name: string;
+    description: string;
+    urgency: string;
+    duration: string;
+    severity: number;
+  };
+  medicalAdvice: { icon: string; title: string; desc: string }[];
+  otherPossibilities: { name: string; pct: number; color: string }[];
+  confidence: number;
+}
 
 export default function ResultPage() {
   const contentRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
   const [isDownloading, setIsDownloading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<DiagnosisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDiagnosis = async () => {
+      const symptomsStr = searchParams.get('symptoms');
+      if (!symptomsStr) {
+        setError("Gejala tidak ditemukan. Silakan ulangi diagnosis.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const symptoms = JSON.parse(symptomsStr);
+        const response = await fetch('/api/diagnosis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symptoms }),
+        });
+
+        if (!response.ok) throw new Error("Gagal mengambil diagnosis");
+
+        const data = await response.json();
+        setResult(data);
+      } catch (err) {
+        console.error(err);
+        setError("Terjadi kesalahan saat memproses diagnosis. Silakan coba lagi.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiagnosis();
+  }, [searchParams]);
 
   const handleDownloadPDF = async () => {
     const element = contentRef.current;
@@ -15,7 +65,6 @@ export default function ResultPage() {
     
     try {
       setIsDownloading(true);
-      // Import dynamically to avoid SSR issues
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
 
@@ -59,6 +108,44 @@ export default function ResultPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="pt-24 flex items-center justify-center min-h-[70vh]">
+          <div className="text-center space-y-6 animate-pulse">
+            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-4xl text-primary animate-spin">clinical_notes</span>
+            </div>
+            <div>
+              <h2 className="text-3xl font-black font-headline text-on-surface">Menganalisis Gejala...</h2>
+              <p className="text-on-surface-variant mt-2">Mesin AI kami sedang meracik diagnosis untuk Anda.</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  if (error || !result) {
+    return (
+      <>
+        <Navbar />
+        <main className="pt-24 flex items-center justify-center min-h-[70vh]">
+          <div className="text-center max-w-md p-8 bg-surface-container rounded-[2rem] border border-outline-variant/30">
+            <span className="material-symbols-outlined text-6xl text-error mb-4">error</span>
+            <h2 className="text-2xl font-bold mb-4">{error || "Terjadi Kesalahan"}</h2>
+            <Link href="/diagnosis" className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold">
+              <span className="material-symbols-outlined">restart_alt</span> Ulangi Diagnosis
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
@@ -74,7 +161,7 @@ export default function ResultPage() {
           </div>
         </div>
         <nav className="flex flex-col gap-1">
-          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2 hover:translate-x-1 transition-transform" href="#">
+          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2 hover:translate-x-1 transition-transform" href="/">
             <span className="material-symbols-outlined">dashboard</span>
             <span className="text-sm">Dashboard</span>
           </Link>
@@ -86,7 +173,7 @@ export default function ResultPage() {
             <span className="material-symbols-outlined">stethoscope</span>
             <span className="text-sm">Gejala</span>
           </Link>
-          <Link className="flex items-center gap-3 p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 mx-2 active:scale-[0.98] duration-150" href="/diagnosis/result">
+          <Link className="flex items-center gap-3 p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 mx-2 active:scale-[0.98] duration-150" href="#">
             <span className="material-symbols-outlined">analytics</span>
             <span className="text-sm font-medium">Analisis</span>
           </Link>
@@ -125,7 +212,7 @@ export default function ResultPage() {
               <div className="flex justify-center md:justify-end">
                 <div className="relative w-48 h-48 md:w-64 md:h-64 flex items-center justify-center bg-white/10 rounded-full backdrop-blur-xl border border-white/20">
                   <div className="text-center">
-                    <span className="block text-5xl md:text-7xl font-black">84<span className="text-2xl">%</span></span>
+                    <span className="block text-5xl md:text-7xl font-black">{result.confidence}<span className="text-2xl">%</span></span>
                     <span className="text-sm uppercase tracking-widest font-bold opacity-80">Tingkat Kepercayaan</span>
                   </div>
                   <div className="absolute inset-0 border-4 border-white/20 rounded-full animate-pulse"></div>
@@ -147,25 +234,25 @@ export default function ResultPage() {
                     <h2 className="text-2xl font-bold text-on-surface mb-2 font-headline">Diagnosis Utama</h2>
                     <p className="text-slate-500">Kondisi yang paling mendekati profil gejala Anda.</p>
                   </div>
-                  <div className="flex items-center gap-2 bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold">
-                    <span className="material-symbols-outlined text-sm">priority_high</span> Perlu Perhatian
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold ${result.primaryCondition.urgency === 'Perlu Perhatian' ? 'bg-error-container text-on-error-container' : 'bg-success-container text-on-success-container'}`}>
+                    <span className="material-symbols-outlined text-sm">{result.primaryCondition.urgency === 'Perlu Perhatian' ? 'priority_high' : 'check'}</span> {result.primaryCondition.urgency}
                   </div>
                 </div>
                 <div className="bg-surface-container-low p-6 rounded-2xl mb-6">
-                  <h3 className="text-xl font-bold text-primary mb-2 font-headline">Faringitis Akut (Radang Tenggorokan)</h3>
-                  <p className="text-on-surface-variant leading-relaxed">Infeksi atau iritasi pada faring yang menyebabkan nyeri tenggorokan, sulit menelan, dan demam ringan. Gejala Anda menunjukkan kecocokan tinggi dengan profil klinis ini.</p>
+                  <h3 className="text-xl font-bold text-primary mb-2 font-headline">{result.primaryCondition.name}</h3>
+                  <p className="text-on-surface-variant leading-relaxed">{result.primaryCondition.description}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-2xl bg-secondary-container/20 border border-secondary-container/30">
-                    <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Durasi Gejala</span>
-                    <span className="text-lg font-semibold">3-7 Hari</span>
+                    <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Estimasi Durasi</span>
+                    <span className="text-lg font-semibold">{result.primaryCondition.duration}</span>
                   </div>
                   <div className="p-4 rounded-2xl bg-tertiary-fixed/20 border border-tertiary-fixed/30">
                     <span className="text-xs font-bold text-tertiary uppercase tracking-wider block mb-1">Tingkat Keparahan</span>
                     <div className="flex gap-1 mt-1">
-                      <div className="h-2 w-8 rounded-full bg-tertiary"></div>
-                      <div className="h-2 w-8 rounded-full bg-tertiary"></div>
-                      <div className="h-2 w-8 rounded-full bg-surface-container-highest"></div>
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className={`h-2 w-8 rounded-full ${i < result.primaryCondition.severity ? 'bg-tertiary' : 'bg-surface-container-highest'}`}></div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -175,12 +262,8 @@ export default function ResultPage() {
               <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
                 <h2 className="text-2xl font-bold text-on-surface mb-6 font-headline">Saran Tindakan Medis</h2>
                 <div className="space-y-4">
-                  {[
-                    { icon: 'water_drop', title: 'Hidrasi Maksimal', desc: 'Minum air putih minimal 2.5 liter per hari untuk menjaga kelembapan tenggorokan.' },
-                    { icon: 'medication', title: 'Analgesik Ringan', desc: 'Gunakan parasetamol atau ibuprofen sesuai dosis untuk meredakan nyeri dan demam.' },
-                    { icon: 'bed', title: 'Istirahat Cukup', desc: 'Tidur minimal 8 jam untuk mempercepat proses pemulihan sistem imun tubuh.' },
-                  ].map((advice) => (
-                    <div key={advice.icon} className="flex gap-4 p-4 rounded-2xl hover:bg-surface-container-low transition-colors group">
+                  {result.medicalAdvice.map((advice, idx) => (
+                    <div key={idx} className="flex gap-4 p-4 rounded-2xl hover:bg-surface-container-low transition-colors group">
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                         <span className="material-symbols-outlined">{advice.icon}</span>
                       </div>
@@ -200,12 +283,8 @@ export default function ResultPage() {
               <div className="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10">
                 <h3 className="font-bold mb-4 font-headline">Kemungkinan Lain</h3>
                 <div className="space-y-4">
-                  {[
-                    { name: 'Common Cold', pct: 65, color: 'bg-primary-container' },
-                    { name: 'Influenza', pct: 42, color: 'bg-secondary' },
-                    { name: 'Laringitis', pct: 28, color: 'bg-outline' },
-                  ].map((item) => (
-                    <div key={item.name}>
+                  {result.otherPossibilities.map((item, idx) => (
+                    <div key={idx}>
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span>{item.name}</span>
                         <span>{item.pct}%</span>
@@ -234,28 +313,6 @@ export default function ResultPage() {
                   </Link>
                 </div>
               </div>
-
-              {/* Map Preview */}
-              <div className="relative h-48 rounded-3xl overflow-hidden bg-slate-200 group">
-                <img alt="Map showing medical centers" className="w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBjazzDWWdEt0z6qBSKWT_GDLs8hRZDZP0XD80Nb4sON5CGv0Mx2iFxfTRDZAYNw6elSayUvlOzeCBjW7Hhf2e6VlW0cELU8BYR1qUg1ohvVdlMiHCp4s8mfjesJCxoG7-TAMuUC8OSeKuShWIkdwovl1IUWmc9hW7pT0qard1NuDCn_k9ZvDWiWieOhLEwjDcrxzhedSzmxeAoxijGVXeAcT6a9KywBg0nQdqKI2BhJHj7PaOtt4Cik6Ozqqq5dKYIcXir41GjVsh" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                  <div className="text-white">
-                    <p className="text-xs font-bold uppercase tracking-widest opacity-80">Terdekat</p>
-                    <p className="font-bold">RS Medika Pratama (1.2km)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Urgent Banner */}
-          <div className="bg-tertiary-container/10 border-l-4 border-tertiary-container p-6 rounded-2xl flex items-center gap-6">
-            <div className="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center text-white shrink-0">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
-            </div>
-            <div>
-              <h4 className="font-bold text-on-tertiary-container font-headline">Kapan harus ke UGD?</h4>
-              <p className="text-sm text-on-tertiary-container/80">Jika Anda mengalami kesulitan bernapas, nyeri dada yang hebat, atau demam di atas 40°C, segera kunjungi layanan darurat terdekat.</p>
             </div>
           </div>
         </div>

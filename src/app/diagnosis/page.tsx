@@ -173,7 +173,7 @@ export default function DiagnosisPage() {
                 </div>
 
                 <Link
-                  href="/diagnosis/result"
+                  href={`/diagnosis/result?symptoms=${encodeURIComponent(JSON.stringify(selected))}`}
                   className={`relative overflow-hidden w-full mt-6 py-4 rounded-2xl font-headline font-black text-lg transition-all flex items-center justify-center gap-2 group/btn
                     ${selected.length === 0 
                       ? 'bg-surface-container-high text-outline pointer-events-none' 
