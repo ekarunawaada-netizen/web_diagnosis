@@ -52,7 +52,7 @@ export default function LoginPage() {
           <div className="bg-white/80 backdrop-blur-md bg-surface-container-lowest p-8 md:p-12 rounded-xl shadow-[0_12px_32px_rgba(25,28,30,0.06)]">
             <div className="text-center mb-10">
               <h1 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-2">Selamat Datang Kembali</h1>
-              <p className="text-on-surface-variant font-body">Masuk ke akun MediScan Anda</p>
+              <p className="text-on-surface-variant font-body">Masuk ke akun Anda</p>
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>

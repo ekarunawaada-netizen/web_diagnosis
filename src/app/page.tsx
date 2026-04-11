@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 const initialTestimonials = [
   {
@@ -41,7 +42,9 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [testimonials, setTestimonials] = useState(initialTestimonials);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [newTestimonial, setNewTestimonial] = useState({ name: '', role: '', text: '', rating: 5 });
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [newTestimonial, setNewTestimonial] = useState({ text: '', rating: 5 });
+  const { user } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -56,17 +59,25 @@ export default function Home() {
     }
   }, []);
 
+  const handleOpenForm = () => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    setIsFormOpen(true);
+  };
+
   const handleTestimonialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTestimonial.name || !newTestimonial.text) return;
+    if (!user || !newTestimonial.text) return;
 
     const added = {
       id: Date.now(),
-      name: newTestimonial.name,
-      role: newTestimonial.role || "Pengguna Baru",
+      name: user.name,
+      role: "Pengguna MediScan",
       rating: newTestimonial.rating,
       text: `"${newTestimonial.text}"`,
-      avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(newTestimonial.name)}`,
+      avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.name)}`,
       isPrimary: false
     };
 
@@ -76,7 +87,7 @@ export default function Home() {
     localStorage.setItem('user_testimonials', JSON.stringify([...saved, added]));
     
     setIsFormOpen(false);
-    setNewTestimonial({ name: '', role: '', text: '', rating: 5 });
+    setNewTestimonial({ text: '', rating: 5 });
   };
 
   return (
@@ -322,7 +333,7 @@ export default function Home() {
                     <h2 className="text-4xl font-black font-headline tracking-tighter text-on-surface">Apa Kata Mereka?</h2>
                     <p className="text-on-surface-variant font-medium text-lg">Suara jujur dari ratusan pencari kesembuhan via kapabilitas platform kami.</p>
                  </div>
-                 <button onClick={() => setIsFormOpen(true)} className="px-6 py-3 bg-white border-2 border-primary text-primary font-bold rounded-2xl hover:bg-primary hover:text-white transition-all active:scale-95 flex items-center gap-2 shadow-sm">
+                 <button onClick={handleOpenForm} className="px-6 py-3 bg-white border-2 border-primary text-primary font-bold rounded-2xl hover:bg-primary hover:text-white transition-all active:scale-95 flex items-center gap-2 shadow-sm">
                    <span className="material-symbols-outlined text-xl">edit_square</span>
                    Bagikan Pengalaman Anda
                  </button>
@@ -356,8 +367,33 @@ export default function Home() {
                  ))}
                </div>
 
-               {/* Modal Form */}
-               {isFormOpen && mounted && (
+               {/* Login Prompt Modal */}
+               {showLoginPrompt && mounted && (
+                 <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                   <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 relative text-center">
+                     <button onClick={() => setShowLoginPrompt(false)} className="absolute top-6 right-6 text-slate-400 hover:text-error transition-colors">
+                       <span className="material-symbols-outlined text-2xl">close</span>
+                     </button>
+                     <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                       <span className="material-symbols-outlined text-4xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+                     </div>
+                     <h3 className="font-headline text-2xl font-black text-on-surface mb-3">Login Diperlukan</h3>
+                     <p className="text-on-surface-variant mb-8 text-sm leading-relaxed">Anda harus masuk ke akun MediScan terlebih dahulu sebelum dapat memberikan rating dan ulasan.</p>
+                     <div className="flex gap-3">
+                       <button onClick={() => setShowLoginPrompt(false)} className="flex-1 px-6 py-3.5 border-2 border-outline-variant/30 text-on-surface-variant font-bold rounded-xl hover:bg-surface-container transition-all active:scale-95">
+                         Nanti Saja
+                       </button>
+                       <Link href="/login" className="flex-1 px-6 py-3.5 bg-primary text-white font-black rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                         <span className="material-symbols-outlined text-lg">login</span>
+                         Masuk Sekarang
+                       </Link>
+                     </div>
+                   </div>
+                 </div>
+               )}
+
+               {/* Rating Form Modal */}
+               {isFormOpen && mounted && user && (
                  <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
                    <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-300 relative">
                      <button onClick={() => setIsFormOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-error transition-colors">
@@ -366,15 +402,18 @@ export default function Home() {
                      <h3 className="font-headline text-2xl font-black text-on-surface mb-2">Tulis Pengalaman Anda</h3>
                      <p className="text-on-surface-variant mb-6 text-sm">Bagaimana MediScan membantu kesehatan Anda? Ceritakan di sini.</p>
                      
+                     {/* Show logged-in user info */}
+                     <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl mb-5">
+                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                         <span className="material-symbols-outlined text-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>account_circle</span>
+                       </div>
+                       <div>
+                         <p className="text-xs font-bold text-outline uppercase tracking-wide">Memberikan ulasan sebagai</p>
+                         <p className="font-bold text-on-surface font-headline">{user.name}</p>
+                       </div>
+                     </div>
+
                      <form onSubmit={handleTestimonialSubmit} className="space-y-4">
-                       <div>
-                         <label className="block text-xs font-bold text-outline uppercase tracking-wide mb-2">Nama Lengkap</label>
-                         <input required value={newTestimonial.name} onChange={e => setNewTestimonial({...newTestimonial, name: e.target.value})} type="text" className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline-variant text-on-surface" placeholder="mis. Budi Santoso" />
-                       </div>
-                       <div>
-                         <label className="block text-xs font-bold text-outline uppercase tracking-wide mb-2">Profesi & Lokasi (Opsional)</label>
-                         <input value={newTestimonial.role} onChange={e => setNewTestimonial({...newTestimonial, role: e.target.value})} type="text" className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline-variant text-on-surface" placeholder="mis. Guru, Malang" />
-                       </div>
                        <div>
                          <label className="block text-xs font-bold text-outline uppercase tracking-wide mb-2">Rating</label>
                          <div className="flex gap-2">
