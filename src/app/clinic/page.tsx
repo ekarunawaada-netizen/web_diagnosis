@@ -10,105 +10,132 @@ const ClinicMap = dynamic(() => import('@/components/ClinicMap'), {
   loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400 font-headline">Memuat Radar Klinik...</div>
 });
 
-// Initial static data
-const initialClinics = [
-  {
-    id: '1',
-    name: 'Klinik Medika Pratama',
-    address: 'Jl. Jend. Sudirman No. 45, Jakarta Pusat',
-    rating: 4.8,
-    distance: '1.2 km',
-    lat: -6.2146,
-    lng: 106.8166,
-    tags: ['Umum', 'Laboratorium', 'Vaksinasi'],
-    badge: 'REKOMENDASI',
-    badgeStyle: 'bg-secondary-container text-on-secondary-container',
-  },
-  {
-    id: '2',
-    name: 'Pusat Kesehatan Sejahtera',
-    address: 'Jl. MH Thamrin No. 12, Jakarta Pusat',
-    rating: 4.5,
-    distance: '2.4 km',
-    lat: -6.1866,
-    lng: 106.8228,
-    tags: ['Gigi', 'Radiologi'],
-    badge: 'Buka Sekarang',
-    badgeStyle: '',
-    isOpen: true,
-  },
-  {
-    id: '3',
-    name: 'Klinik RS Kasih Ibu',
-    address: 'Mampang Prapatan, Jakarta Selatan',
-    rating: 4.9,
-    distance: '3.1 km',
-    lat: -6.2442,
-    lng: 106.8266,
-    tags: ['Pediatri', 'Obstetri'],
-  },
-  {
-    id: '4',
-    name: 'Puskesmas Kebayoran Baru',
-    address: 'Kebayoran Baru, Jakarta Selatan',
-    rating: 4.4,
-    distance: '4.5 km',
-    lat: -6.2367,
-    lng: 106.7931,
-    tags: ['BPJS', 'Umum'],
-    badge: 'Faskes Tingkat 1',
-    badgeStyle: 'bg-tertiary-container text-tertiary',
-  }
-];
+// Haversine formula to calculate real distance between two GPS points
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
-// Function to generate mock clinics near user
-const generateLocalClinics = (lat: number, lng: number) => {
-  return [
-    {
-      id: 'local_1',
-      name: 'Klinik Prima Area Anda',
-      address: 'Pusat Medis Terdekat, Radius 1km',
-      rating: 4.8,
-      distance: '0.8 km',
-      lat: lat + 0.005,
-      lng: lng + 0.005,
-      tags: ['Umum', 'Laboratorium'],
-      badge: 'REKOMENDASI TERDEKAT',
-      badgeStyle: 'bg-secondary-container text-on-secondary-container',
-    },
-    {
-      id: 'local_2',
-      name: 'Puskesmas Daerah Utama',
-      address: 'Layanan Kesehatan Masyarakat',
-      rating: 4.5,
-      distance: '1.5 km',
-      lat: lat - 0.008,
-      lng: lng + 0.002,
-      tags: ['BPJS', 'Umum'],
-      badge: 'Buka Sekarang',
-      badgeStyle: '',
-      isOpen: true,
-    },
-    {
-      id: 'local_3',
-      name: 'RS Darurat & Spesialis Kasih',
-      address: 'Jalan Protokol Kota',
-      rating: 4.9,
-      distance: '3.2 km',
-      lat: lat + 0.015,
-      lng: lng - 0.012,
-      tags: ['UGD 24 Jam', 'Spesialis'],
-    }
-  ];
-};
+// Determine tags based on OSM amenity type and other tags
+function getClinicTags(tags: Record<string, string>): string[] {
+  const result: string[] = [];
+  const amenity = tags.amenity || '';
+  
+  if (amenity === 'hospital') result.push('Rumah Sakit');
+  else if (amenity === 'clinic') result.push('Klinik');
+  else if (amenity === 'doctors') result.push('Dokter Praktek');
+  else if (amenity === 'dentist') result.push('Dokter Gigi');
+  else if (amenity === 'pharmacy') result.push('Apotek');
+  else result.push('Fasilitas Kesehatan');
+
+  if (tags.emergency === 'yes') result.push('UGD 24 Jam');
+  if (tags.healthcare === 'laboratory') result.push('Laboratorium');
+  if (tags['healthcare:speciality']) {
+    const spec = tags['healthcare:speciality'].split(';')[0];
+    result.push(spec.charAt(0).toUpperCase() + spec.slice(1));
+  }
+  
+  return result.slice(0, 3);
+}
+
+// Fetch REAL clinics from OpenStreetMap Overpass API
+async function fetchNearbyClinics(lat: number, lng: number, radiusMeters: number = 5000) {
+  const query = `
+    [out:json][timeout:15];
+    (
+      node["amenity"="clinic"](around:${radiusMeters},${lat},${lng});
+      node["amenity"="hospital"](around:${radiusMeters},${lat},${lng});
+      node["amenity"="doctors"](around:${radiusMeters},${lat},${lng});
+      node["amenity"="dentist"](around:${radiusMeters},${lat},${lng});
+      way["amenity"="clinic"](around:${radiusMeters},${lat},${lng});
+      way["amenity"="hospital"](around:${radiusMeters},${lat},${lng});
+      way["amenity"="doctors"](around:${radiusMeters},${lat},${lng});
+    );
+    out center body;
+  `;
+
+  const response = await fetch('https://overpass-api.de/api/interpreter', {
+    method: 'POST',
+    body: `data=${encodeURIComponent(query)}`,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  if (!response.ok) throw new Error('Overpass API gagal');
+
+  const data = await response.json();
+  
+  const clinics = data.elements
+    .map((el: any, idx: number) => {
+      const elLat = el.lat ?? el.center?.lat;
+      const elLng = el.lon ?? el.center?.lon;
+      if (!elLat || !elLng) return null;
+
+      const name = el.tags?.name || el.tags?.['name:id'] || el.tags?.['name:en'] || 'Fasilitas Kesehatan';
+      const street = el.tags?.['addr:street'] || '';
+      const houseNumber = el.tags?.['addr:housenumber'] || '';
+      const city = el.tags?.['addr:city'] || el.tags?.['addr:subdistrict'] || '';
+      const addressParts = [street, houseNumber, city].filter(Boolean);
+      const address = addressParts.length > 0 ? addressParts.join(', ') : 'Alamat tidak tersedia di peta';
+
+      const dist = haversineDistance(lat, lng, elLat, elLng);
+      const tags = getClinicTags(el.tags || {});
+      const amenity = el.tags?.amenity || '';
+
+      let badge = '';
+      let badgeStyle = '';
+      if (idx === 0) {
+        badge = 'TERDEKAT';
+        badgeStyle = 'bg-secondary-container text-on-secondary-container';
+      } else if (amenity === 'hospital') {
+        badge = 'RUMAH SAKIT';
+        badgeStyle = 'bg-tertiary-container text-tertiary';
+      }
+
+      const isOpen = el.tags?.opening_hours?.includes('24/7') || el.tags?.emergency === 'yes';
+
+      return {
+        id: `osm_${el.id}`,
+        name,
+        address,
+        rating: '-',
+        distance: dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`,
+        distanceRaw: dist,
+        lat: elLat,
+        lng: elLng,
+        tags,
+        badge: isOpen ? 'Buka 24 Jam' : badge,
+        badgeStyle: isOpen ? '' : badgeStyle,
+        isOpen,
+      };
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => a.distanceRaw - b.distanceRaw);
+
+  // Mark the first one as closest recommendation
+  if (clinics.length > 0 && !clinics[0].isOpen) {
+    clinics[0].badge = 'TERDEKAT';
+    clinics[0].badgeStyle = 'bg-secondary-container text-on-secondary-container';
+  }
+
+  return clinics;
+}
 
 export default function ClinicPage() {
-  const [clinicList, setClinicList] = useState(initialClinics);
-  const [selectedClinic, setSelectedClinic] = useState<any>(initialClinics[0]);
+  const [clinicList, setClinicList] = useState<any[]>([]);
+  const [selectedClinic, setSelectedClinic] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Geolocation States
   const [isTracking, setIsTracking] = useState(false);
+  const [fetchError, setFetchError] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | null>(null);
 
   // Filter list based on search
@@ -124,34 +151,54 @@ export default function ClinicPage() {
     }
 
     setIsTracking(true);
+    setFetchError('');
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setIsTracking(false);
+      async (position) => {
         const { latitude, longitude } = position.coords;
         const newUserLoc = { lat: latitude, lng: longitude };
         setUserLocation(newUserLoc);
 
-        const localClinics = generateLocalClinics(latitude, longitude);
-        setClinicList(localClinics);
-
-        // Ubah mode peta menjadi "Eksplorasi Bebas" berdasar titik GPS aktual
+        // Set map center to user position immediately
         setSelectedClinic({
           id: 'geo_live',
           name: 'Posisi Anda Saat Ini',
           address: `Koordinat [${latitude.toFixed(4)}, ${longitude.toFixed(4)}]`,
           lat: latitude,
           lng: longitude,
-          rating: 'N/A',
-          distance: '0 km',
+          rating: '-',
+          distance: '0 m',
           tags: ['Live Tracking', 'Titik Pusat'],
           isGeoTarget: true
         });
+
+        try {
+          // Fetch REAL nearby clinics from OpenStreetMap
+          const realClinics = await fetchNearbyClinics(latitude, longitude, 5000);
+          
+          if (realClinics.length === 0) {
+            // Try wider radius if none found
+            const widerClinics = await fetchNearbyClinics(latitude, longitude, 15000);
+            setClinicList(widerClinics);
+            if (widerClinics.length > 0) {
+              setSelectedClinic(widerClinics[0]);
+            }
+          } else {
+            setClinicList(realClinics);
+            setSelectedClinic(realClinics[0]);
+          }
+          setHasSearched(true);
+        } catch (err) {
+          console.error('Error fetching clinics:', err);
+          setFetchError('Gagal mengambil data fasilitas kesehatan. Coba lagi dalam beberapa saat.');
+        }
+
+        setIsTracking(false);
       },
       (error) => {
         setIsTracking(false);
-        alert("Akses lokasi ditolak atau gagal dilacak oleh satelit. Pastikan Anda menekan tombol 'Allow/Izinkan'.");
+        alert("Akses lokasi ditolak atau gagal dilacak. Pastikan Anda menekan tombol 'Allow/Izinkan'.");
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -176,53 +223,94 @@ export default function ClinicPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-2 pb-2">
               <button
                 onClick={handleFindNearby}
                 disabled={isTracking}
-                className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2 whitespace-nowrap transition-colors ${isTracking
+                className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${isTracking
                     ? 'bg-outline-variant text-white cursor-wait'
-                    : selectedClinic.id === 'geo_live'
-                      ? 'bg-tertiary text-on-tertiary shadow-md ring-2 ring-tertiary/50'
+                    : userLocation
+                      ? 'bg-tertiary text-on-tertiary shadow-md'
                       : 'bg-primary text-on-primary hover:bg-on-primary-container'
                   }`}
               >
                 {isTracking ? (
                   <span className="material-symbols-outlined animate-spin text-[18px]">sync</span>
                 ) : (
-                  <span className="material-symbols-outlined text-[18px]" style={selectedClinic.id === 'geo_live' ? { fontVariationSettings: "'FILL' 1" } : undefined}>near_me</span>
+                  <span className="material-symbols-outlined text-[18px]" style={userLocation ? { fontVariationSettings: "'FILL' 1" } : undefined}>near_me</span>
                 )}
-                {isTracking ? 'Melacak...' : selectedClinic.id === 'geo_live' ? 'Mode Area Saya' : 'Klinik Terdekat'}
+                {isTracking ? 'Mencari klinik nyata...' : userLocation ? 'Perbarui Lokasi' : 'Cari Klinik Terdekat'}
               </button>
-
-              {['24 Jam', 'BPJS Kesehatan', 'Spesialis Anak'].map((f) => (
-                <button key={f} className="px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant text-sm font-medium whitespace-nowrap hover:bg-surface-dim transition-colors">
-                  {f}
-                </button>
-              ))}
             </div>
           </div>
 
           {/* Clinic Cards */}
           <div className="flex-1 p-6 space-y-4">
 
-            {/* Info Box Khusus bila Mode Pelacakan Area Sedang Menyala */}
-            {selectedClinic.id === 'geo_live' && (
-              <div className="bg-tertiary/10 border-l-4 border-tertiary p-4 rounded-xl mb-4 animate-in fade-in zoom-in-95 duration-300">
+            {/* Initial State - No search yet */}
+            {!hasSearched && !isTracking && clinicList.length === 0 && (
+              <div className="text-center py-16 px-4">
+                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="material-symbols-outlined text-4xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_searching</span>
+                </div>
+                <h3 className="font-headline font-bold text-xl text-on-surface mb-3">Temukan Fasilitas Kesehatan</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed mb-6 max-w-xs mx-auto">
+                  Tekan tombol <strong>&quot;Cari Klinik Terdekat&quot;</strong> untuk mendeteksi klinik dan rumah sakit <strong>nyata</strong> di sekitar lokasi Anda menggunakan data OpenStreetMap.
+                </p>
+                <button
+                  onClick={handleFindNearby}
+                  className="px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2 mx-auto"
+                >
+                  <span className="material-symbols-outlined text-lg">my_location</span>
+                  Aktifkan Lokasi GPS
+                </button>
+              </div>
+            )}
+
+            {/* Loading indicator */}
+            {isTracking && (
+              <div className="text-center py-16 px-4">
+                <div className="w-20 h-20 bg-tertiary/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                  <span className="material-symbols-outlined text-4xl text-tertiary animate-spin">radar</span>
+                </div>
+                <h3 className="font-headline font-bold text-xl text-on-surface mb-2">Memindai Area Anda...</h3>
+                <p className="text-on-surface-variant text-sm">Mengambil data fasilitas kesehatan dari OpenStreetMap</p>
+              </div>
+            )}
+
+            {/* Error message */}
+            {fetchError && (
+              <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-xl mb-4">
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-tertiary mt-0.5">radar</span>
+                  <span className="material-symbols-outlined text-red-500 mt-0.5">error</span>
                   <div>
-                    <h4 className="font-bold text-on-surface">Radar Fasilitas Aktif</h4>
-                    <p className="text-sm text-on-surface-variant mt-1 leading-relaxed">Peta satelit sedang membongkar seluruh fasilitas medis (Klinik & Rumah Sakit) yang secara harfiah merangkul radius {selectedClinic.address}.</p>
+                    <h4 className="font-bold text-red-800">Kesalahan</h4>
+                    <p className="text-sm text-red-600 mt-1">{fetchError}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {filteredClinics.length === 0 && (
+            {/* Info Box when geo tracking active */}
+            {userLocation && hasSearched && (
+              <div className="bg-tertiary/10 border-l-4 border-tertiary p-4 rounded-xl mb-4 animate-in fade-in zoom-in-95 duration-300">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-tertiary mt-0.5">radar</span>
+                  <div>
+                    <h4 className="font-bold text-on-surface">Data Fasilitas Nyata</h4>
+                    <p className="text-sm text-on-surface-variant mt-1 leading-relaxed">
+                      Menampilkan <strong>{clinicList.length}</strong> fasilitas kesehatan nyata di sekitar koordinat [{userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}]. Data bersumber dari OpenStreetMap.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {hasSearched && !isTracking && filteredClinics.length === 0 && (
               <div className="text-center py-10 opacity-70">
                 <span className="material-symbols-outlined text-4xl text-outline mb-2">search_off</span>
-                <p className="font-medium">Tidak ada klinik yang memuat data tersebut.</p>
+                <p className="font-medium">Tidak ada fasilitas kesehatan ditemukan di area ini.</p>
+                <p className="text-sm text-on-surface-variant mt-2">Coba perbarui lokasi untuk memperluas pencarian.</p>
               </div>
             )}
 
@@ -230,7 +318,7 @@ export default function ClinicPage() {
               <div
                 key={clinic.id}
                 onClick={() => setSelectedClinic(clinic)}
-                className={`group bg-surface-container-lowest rounded-xl p-5 cursor-pointer transition-all duration-300 ring-2 ${selectedClinic.id === clinic.id ? 'ring-primary bg-primary/5 shadow-md scale-[1.02] z-10 relative' : 'ring-outline-variant/10 hover:ring-outline-variant/40 hover:bg-surface-container-low'}`}
+                className={`group bg-surface-container-lowest rounded-xl p-5 cursor-pointer transition-all duration-300 ring-2 ${selectedClinic?.id === clinic.id ? 'ring-primary bg-primary/5 shadow-md scale-[1.02] z-10 relative' : 'ring-outline-variant/10 hover:ring-outline-variant/40 hover:bg-surface-container-low'}`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -243,24 +331,21 @@ export default function ClinicPage() {
                         <span className="text-[10px] font-bold text-tertiary-container uppercase tracking-wide">{clinic.badge}</span>
                       </div>
                     )}
-                    <h3 className={`text-lg font-bold transition-colors ${selectedClinic.id === clinic.id ? 'text-primary' : 'text-on-surface'}`}>{clinic.name}</h3>
+                    <h3 className={`text-lg font-bold transition-colors ${selectedClinic?.id === clinic.id ? 'text-primary' : 'text-on-surface'}`}>{clinic.name}</h3>
                     <p className="text-sm text-on-surface-variant flex items-center gap-1 mt-1">
                       <span className="material-symbols-outlined text-[16px]">location_on</span> {clinic.address}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="flex items-center justify-end text-tertiary font-bold">
-                      <span className="material-symbols-outlined text-[18px] mr-1" style={{ fontVariationSettings: "'FILL' 1" }}>star</span> {clinic.rating}
-                    </div>
-                    <span className="text-xs text-outline font-medium">{clinic.distance}</span>
+                    <span className="text-xs text-outline font-medium bg-surface-container-highest px-2 py-1 rounded-full">{clinic.distance}</span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {clinic.tags.map((tag) => (
+                  {clinic.tags.map((tag: string) => (
                     <span key={tag} className="px-2 py-1 bg-surface-container-highest text-[11px] font-medium text-on-surface-variant rounded">{tag}</span>
                   ))}
                 </div>
-                {selectedClinic.id === clinic.id && (
+                {selectedClinic?.id === clinic.id && (
                   <div className="grid grid-cols-1 gap-3 pt-4 border-t border-outline-variant/20 animate-in fade-in duration-300 slide-in-from-top-1">
                     <a 
                       href={`https://www.google.com/maps/dir/?api=1${userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : ''}&destination=${clinic.lat},${clinic.lng}`}
@@ -268,7 +353,7 @@ export default function ClinicPage() {
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-white border border-primary font-bold text-sm hover:shadow-lg hover:shadow-primary/30 transition-all"
                     >
-                      <span className="material-symbols-outlined text-[18px]">directions</span> Rute
+                      <span className="material-symbols-outlined text-[18px]">directions</span> Buka Rute di Google Maps
                     </a>
                   </div>
                 )}
@@ -277,7 +362,7 @@ export default function ClinicPage() {
           </div>
 
           <footer className="p-6 border-t border-outline-variant/10 bg-surface-container-lowest font-label text-xs text-on-surface-variant text-center">
-            © 2024 MediScan Healthcare. All rights reserved.
+            Data fasilitas kesehatan bersumber dari © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" className="underline">OpenStreetMap</a> contributors.
           </footer>
         </aside>
 
@@ -290,10 +375,17 @@ export default function ClinicPage() {
           />
 
           {/* Radar Status Indicator */}
-          {selectedClinic.isGeoTarget && (
+          {isTracking && (
             <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-blue-100 flex items-center gap-2 z-30 animate-pulse">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
               <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest">Scanning Area...</span>
+            </div>
+          )}
+
+          {/* Data source attribution on map */}
+          {hasSearched && clinicList.length > 0 && (
+            <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-md z-30 text-[10px] font-medium text-slate-600">
+              📍 {clinicList.length} fasilitas dari OpenStreetMap
             </div>
           )}
         </section>

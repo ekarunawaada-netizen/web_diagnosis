@@ -125,22 +125,6 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <div className="relative my-8">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-surface-container-high"></div></div>
-              <div className="relative flex justify-center text-xs uppercase"><span className="bg-surface-container-lowest px-4 text-on-surface-variant font-medium">Atau daftar dengan</span></div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <button className="flex items-center justify-center p-3 border border-outline-variant/20 rounded-xl hover:bg-surface-container-low transition-colors">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUXIlOmViYT_Ia62Hsc8qAk9FTiTqV5Oeoss08FH5sW4YnkRFc9mqOzTaUsIfI1DmlR5kGRhX_4iqLXFVZdENFsMcpjhfQNZzIVEAH5Kv2QbUoRQIFeMeQy0VlOkK6MDVpqeAPBqFcqkFEYPty-1lIv9qraYDBL3Prp-7KcuDovbJMwVqJhikcOrGyu3QHpXXNndaYVJUNCW420vXZ4j_9_gvP7kNHwOCHyDnDtx2AF0d4mcLaqsSCc_S-Y97fSkkK0P-TI2EMCvEG" alt="Google" className="w-5 h-5" />
-              </button>
-              <button className="flex items-center justify-center p-3 border border-outline-variant/20 rounded-xl hover:bg-surface-container-low transition-colors">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 text-on-surface" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
-              </button>
-              <button className="flex items-center justify-center p-3 border border-outline-variant/20 rounded-xl hover:bg-surface-container-low transition-colors">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#1877F2]" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path></svg>
-              </button>
-            </div>
 
             <div className="mt-10 text-center">
               <p className="text-on-surface-variant text-sm">

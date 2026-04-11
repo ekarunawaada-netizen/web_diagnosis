@@ -154,7 +154,7 @@ export default function Home() {
               </h1>
               
               <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed font-medium">
-                Dapatkan analisis kesehatan instan, akurat, dan komprehensif. MediScan membantu Anda merekonstruksi gejala menjadi wawasan medis konkret dalam detik.
+                Dapatkan analisis kesehatan secara cepat, akurat, dan mudah dipahami. MediScan membantu mengubah gejala yang Anda alami menjadi informasi medis yang jelas dalam hitungan detik.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-5 pt-6">
@@ -257,9 +257,9 @@ export default function Home() {
         <section className="py-32 bg-surface relative z-10">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-20 space-y-5">
-              <span className="text-primary font-bold tracking-widest uppercase text-sm">Keunggulan Arsitektur</span>
+              <span className="text-primary font-bold tracking-widest uppercase text-sm">Keunggulan Website kami </span>
               <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tighter text-on-surface">Dirancang melampaui Aplikasi Biasa.</h2>
-              <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">Bukan sekadar buku catatan resep. Ini adalah terminal kesehatan pintar pribadi di telapak tangan Anda.</p>
+              <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">MediScan membantu Anda memahami kondisi kesehatan secara praktis, cepat, dan terpercaya.</p>
             </div>
             
             {/* Bento Layout Grid */}
@@ -271,8 +271,8 @@ export default function Home() {
                   <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center mb-6 shadow-lg shadow-primary/30 relative z-20">
                     <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
                   </div>
-                  <h3 className="text-3xl font-black font-headline mb-4 text-on-surface">Mesin Inferensi Kecerdasan Buatan</h3>
-                  <p className="text-on-surface-variant text-lg leading-relaxed">Sistem Neural kami memetakan silang 15.000 jurnal medis dan gejala spesifik untuk mencetak persentase kemungkinan persis sebagaimana dokter bertindak.</p>
+                  <h3 className="text-3xl font-black font-headline mb-4 text-on-surface">Analisis Berbasis Kecerdasan Buatan</h3>
+                  <p className="text-on-surface-variant text-lg leading-relaxed">Sistem kami menganalisis ribuan referensi medis dan mencocokkannya dengan gejala yang Anda masukkan untuk menghasilkan estimasi kondisi kesehatan yang akurat.</p>
                 </div>
                 <div className="absolute -right-20 -bottom-20 opacity-[0.08] group-hover:opacity-20 transition-all duration-700 pointer-events-none group-hover:scale-110 group-hover:-rotate-12">
                   <span className="material-symbols-outlined text-[400px] leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
@@ -284,8 +284,8 @@ export default function Home() {
                 <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center mb-6 shadow-lg relative z-20 group-hover:bg-white/30 transition-colors">
                   <span className="material-symbols-outlined text-4xl group-hover:animate-bounce" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_good</span>
                 </div>
-                <h3 className="text-2xl font-black font-headline mb-3 text-white relative z-20">Otoritas Privasi</h3>
-                <p className="text-white/80 font-medium leading-relaxed relative z-20">Semua metadata dilumuri lapisan enkripsi AES Tingkat Paripurna. Rekam medis Anda adalah hak kekayaan intelektual absolut Anda seorang.</p>
+                <h3 className="text-2xl font-black font-headline mb-3 text-white relative z-20">Keamanan dan Privasi Terjamin</h3>
+                <p className="text-white/80 font-medium leading-relaxed relative z-20">Seluruh data Anda dilindungi dengan sistem enkripsi tingkat tinggi. Informasi kesehatan Anda bersifat pribadi dan tidak dibagikan kepada pihak mana pun.</p>
                 <div className="absolute -right-16 -bottom-16 opacity-10 group-hover:opacity-20 transition-all duration-700 pointer-events-none group-hover:scale-110 group-hover:rotate-12">
                   <span className="material-symbols-outlined text-[300px] leading-none text-white" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_good</span>
                 </div>
@@ -311,9 +311,9 @@ export default function Home() {
               {/* Box 4 (Span 2 Cols, 1 Row) - Report */}
               <div className="md:col-span-2 bg-on-surface text-surface rounded-[2.5rem] p-0 flex flex-col md:flex-row overflow-hidden shadow-2xl hover:-translate-y-2 transition-transform duration-500 relative">
                 <div className="p-10 w-full md:w-1/2 flex flex-col justify-center z-10 relative">
-                  <span className="text-primary-container font-bold tracking-widest text-xs uppercase mb-4">Eksportasi Universal</span>
-                  <h3 className="text-3xl font-black font-headline mb-4">Cetak Laporan Medis PDF Klinis.</h3>
-                  <p className="text-slate-400 text-lg leading-relaxed">Tidak ada lagi argumen berbelit saat kunjungan dokter. Berikan lembaran PDF hasil diagnosa final kepada sang dokter spesialis dan ciptakan rujukan yang akurat.</p>
+                  <span className="text-primary-container font-bold tracking-widest text-xs uppercase mb-4">Informasi Hasil yang Sistematis</span>
+                  <h3 className="text-3xl font-black font-headline mb-4">Hasil Analisis yang Mudah Dipahami</h3>
+                  <p className="text-slate-400 text-lg leading-relaxed">Dapatkan ringkasan hasil analisis gejala yang jelas dan terstruktur, sehingga membantu Anda memahami kemungkinan kondisi kesehatan dengan lebih baik.</p>
                 </div>
                 <div className="w-full md:w-1/2 relative bg-surface-container overflow-hidden hidden md:block group">
                   <div className="absolute inset-0 bg-primary/20 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
@@ -341,26 +341,22 @@ export default function Home() {
                
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                  {testimonials.map((t, idx) => (
-                   <div key={t.id} className={`rounded-3xl p-8 border hover:-translate-y-2 transition-all duration-300 ${t.transform || ''} ${
-                     t.isPrimary 
-                       ? 'bg-primary hero-gradient border-primary-container hover:shadow-xl text-white shadow-lg shadow-primary/20' 
-                       : 'bg-surface border-outline-variant/20 hover:border-primary/30 hover:shadow-xl'
-                   }`}>
-                      <div className={`flex gap-1 mb-6 ${t.isPrimary ? 'text-primary-container' : 'text-tertiary'}`}>
+                   <div key={t.id} className={`rounded-3xl p-8 border hover:-translate-y-2 transition-all duration-300 ${t.transform || ''} bg-surface border-outline-variant/20 hover:border-primary/30 hover:shadow-xl`}>
+                      <div className="flex gap-1 mb-6 text-tertiary">
                          {Array.from({ length: 5 }).map((_, i) => (
                            <span key={i} className="material-symbols-outlined text-lg" style={{ fontVariationSettings: i < t.rating ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                          ))}
                       </div>
-                      <p className={`text-lg leading-relaxed font-medium italic mb-8 ${t.isPrimary ? 'text-white' : 'text-on-surface'}`}>
+                      <p className="text-lg leading-relaxed font-medium italic mb-8 text-on-surface">
                          {t.text}
                       </p>
                       <div className="flex items-center gap-4">
                          <div className="w-12 h-12 relative flex-shrink-0">
-                           <Image fill src={t.avatar} alt="Avatar" className={`rounded-full object-cover ${t.isPrimary ? 'border-2 border-primary-container' : ''}`} />
+                           <Image fill src={t.avatar} alt="Avatar" className="rounded-full object-cover" />
                          </div>
                          <div>
-                            <h4 className={`font-bold font-headline ${t.isPrimary ? 'text-white' : 'text-on-surface'}`}>{t.name}</h4>
-                            <p className={`text-xs font-bold truncate max-w-[150px] ${t.isPrimary ? 'text-primary-container' : 'text-on-surface-variant'}`}>{t.role}</p>
+                            <h4 className="font-bold font-headline text-on-surface">{t.name}</h4>
+                            <p className="text-xs font-bold truncate max-w-[150px] text-on-surface-variant">{t.role}</p>
                          </div>
                       </div>
                    </div>
@@ -448,7 +444,7 @@ export default function Home() {
               
               <div className="relative z-10 max-w-3xl mx-auto space-y-8">
                 <h2 className="text-4xl md:text-6xl font-black font-headline leading-tight tracking-tighter">
-                  Satu Ketukan untuk Mengakhiri Keraguan Anda.
+                  Mulai Analisis Kesehatan Anda Sekarang
                 </h2>
                 <p className="text-xl text-slate-300 font-medium leading-relaxed">
                   Tidak perlu membuang waktu cemas karena mesin pencari biasa. Delegasikan gejalat Anda pada algoritma kami dan temukan panduan kesehatan absolut di sini.
