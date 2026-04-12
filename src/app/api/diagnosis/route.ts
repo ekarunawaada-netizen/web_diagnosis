@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDiagnosis } from "../../../utils/gemini";
+import { getDiagnosis } from "../../../utils/ai";
 
 export const dynamic = 'force-dynamic';
 

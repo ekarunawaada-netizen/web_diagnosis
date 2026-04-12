@@ -2,11 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { AVAILABLE_MODELS, ModelType } from '@/utils/gemini';
+import { AVAILABLE_MODELS, ModelType } from '@/utils/ai';
 
 interface Message {
   role: 'user' | 'model';
   parts: { text: string }[];
+  usedModel?: string;
+  wasFallback?: boolean;
 }
 
 export default function Chatbot() {
@@ -14,7 +16,7 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ModelType>('FLASH');
+  const [selectedModel, setSelectedModel] = useState<ModelType>('LLAMA3_8B');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,9 +52,16 @@ export default function Chatbot() {
       }
 
       const responseText = data.response;
+      const returnedModel = data.usedModel;
+      const isFallback = data.wasFallback;
       
-      // Siapkan pesan kosong untuk model
-      setMessages((prev) => [...prev, { role: 'model', parts: [{ text: '' }] }]);
+      // Siapkan pesan kosong untuk model beserta meta datanya
+      setMessages((prev) => [...prev, { 
+        role: 'model', 
+        parts: [{ text: '' }],
+        usedModel: returnedModel,
+        wasFallback: isFallback
+      }]);
       setLoading(false); // Matikan titik-titik loading
 
       // Simulasi efek ngetik yang sangat presisi dan stabil
@@ -116,7 +125,7 @@ export default function Chatbot() {
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
                       <p className="text-[9px] uppercase font-black tracking-widest text-white/90">
-                        {selectedModel === 'FLASH' ? 'Gemini Flash' : selectedModel === 'PRO' ? 'Gemini Pro' : selectedModel === 'GEMMA' ? 'Gemma 7B' : 'Gemma 4 31B'}
+                        {selectedModel === 'LLAMA3_8B' ? 'Llama 3 8B' : selectedModel === 'LLAMA3_70B' ? 'Llama 3 70B' : selectedModel === 'MIXTRAL' ? 'Mixtral' : 'Gemma 7B'}
                       </p>
                       <span className="material-symbols-outlined text-[12px] text-white/70 group-hover:text-white transition-transform duration-300">expand_more</span>
                     </button>
@@ -137,7 +146,7 @@ export default function Chatbot() {
                                 : 'text-slate-600 hover:bg-slate-50'
                             }`}
                           >
-                            {key === 'FLASH' ? 'Fast (Flash)' : key === 'PRO' ? 'Smart (Pro)' : key === 'GEMMA' ? 'Light (Gemma)' : 'Tech (Gemma 4)'}
+                            {key === 'LLAMA3_8B' ? 'Llama 8B (Cepat)' : key === 'LLAMA3_70B' ? 'Llama 70B (Pintar)' : key === 'MIXTRAL' ? 'Mixtral 8x7B' : 'Gemma 7B (Ringan)'}
                             {selectedModel === key && <span className="material-symbols-outlined text-[14px]">check</span>}
                           </button>
                         ))}
@@ -186,15 +195,32 @@ export default function Chatbot() {
                       <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
                     </div>
                   )}
-                  <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-[13.5px] shadow-sm leading-relaxed ${
-                    m.role === 'user' 
-                      ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-tr-none' 
-                      : 'bg-white text-on-surface rounded-tl-none border border-outline-variant/20 prose prose-sm prose-p:my-1 prose-ul:my-1 prose-strong:text-primary max-w-none w-full break-words prose-headings:text-on-surface prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-3 prose-li:my-0.5'
-                  }`}>
-                    {m.role === 'user' ? (
-                      m.parts[0].text
-                    ) : (
-                      <ReactMarkdown>{m.parts[0].text}</ReactMarkdown>
+                  <div className="flex flex-col gap-1 max-w-[80%]">
+                    {/* Fallback Warning Box */}
+                    {m.wasFallback && (
+                      <div className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-1 rounded-md mb-1 w-max border border-amber-200">
+                        ⚠️ Server Penuh, Dialihkan Otomatis
+                      </div>
+                    )}
+                    
+                    <div className={`px-4 py-3 rounded-2xl text-[13.5px] shadow-sm leading-relaxed ${
+                      m.role === 'user' 
+                        ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-tr-none self-end' 
+                        : 'bg-white text-on-surface rounded-tl-none border border-outline-variant/20 prose prose-sm prose-p:my-1 prose-ul:my-1 prose-strong:text-primary max-w-none break-words prose-headings:text-on-surface prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-3 prose-li:my-0.5'
+                    }`}>
+                      {m.role === 'user' ? (
+                        m.parts[0].text
+                      ) : (
+                        <ReactMarkdown>{m.parts[0].text}</ReactMarkdown>
+                      )}
+                    </div>
+                    
+                    {/* Model Badge */}
+                    {m.role === 'model' && m.usedModel && (
+                      <div className="text-[9px] font-semibold text-slate-400 mt-0.5 ml-1 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[10px]">bolt</span> 
+                        {m.usedModel === 'LLAMA3_8B' ? 'Groq Llama-3-8B' : m.usedModel === 'LLAMA3_70B' ? 'Groq Llama-3-70B' : m.usedModel === 'MIXTRAL' ? 'Groq Mixtral' : 'Groq Gemma'}
+                      </div>
                     )}
                   </div>
                 </div>
