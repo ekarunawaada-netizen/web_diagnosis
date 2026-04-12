@@ -100,7 +100,7 @@ export default function Chatbot() {
       {isOpen && (
         <div className="mb-4 w-[350px] md:w-[400px] h-[550px] bg-surface/80 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl border border-white/40 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300">
           {/* Header */}
-          <div className="p-5 bg-gradient-to-r from-primary via-primary to-primary-container text-white shrink-0 shadow-md relative overflow-hidden">
+          <div className="p-5 bg-gradient-to-r from-primary via-primary to-primary-container text-white shrink-0 shadow-md relative">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-3">
