@@ -205,12 +205,12 @@ export default function ClinicPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-[72px] h-screen flex flex-col md:flex-row overflow-hidden bg-surface-container-lowest">
+      <main className="pt-[72px] h-[calc(100vh-72px)] md:h-screen flex flex-col md:flex-row overflow-hidden bg-surface-container-lowest relative">
         {/* Sidebar: Clinic List */}
         <aside className="w-full md:w-[420px] lg:w-[480px] h-full overflow-y-auto bg-surface flex flex-col z-20 shadow-xl shadow-black/5">
           {/* Search & Filter */}
           <div className="p-6 space-y-4 bg-surface-container-lowest sticky top-0 z-30 shadow-sm border-b border-outline-variant/10">
-            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Cari Rumah sakit terdekat</h1>
+            <h1 className="text-xl md:text-2xl font-extrabold text-on-surface tracking-tight font-headline">Cari Rumah Sakit Terdekat</h1>
             <div className="relative group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <span className="material-symbols-outlined text-outline">search</span>

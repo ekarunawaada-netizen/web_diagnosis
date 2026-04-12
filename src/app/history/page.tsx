@@ -28,13 +28,13 @@ export default function HistoryPage() {
   return (
     <>
       <Navbar />
-      <main className="pt-24 pb-12 min-h-screen px-4 md:px-8 relative bg-surface-container-lowest">
+      <main className="pt-24 pb-12 min-h-screen px-4 sm:px-6 md:px-8 relative bg-surface-container-lowest">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-12">
-            <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-on-surface">
+          <div className="mb-10 md:mb-12">
+            <h1 className="font-headline text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-on-surface">
               Riwayat Diagnosis
             </h1>
-            <p className="text-on-surface-variant font-medium text-lg max-w-xl">
+            <p className="text-on-surface-variant font-medium text-base md:text-lg max-w-xl">
               Lihat kembali hasil analisis kesehatan Anda sebelumnya untuk memantau perkembangan kondisi Anda.
             </p>
           </div>
