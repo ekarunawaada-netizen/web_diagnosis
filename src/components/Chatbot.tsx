@@ -53,34 +53,38 @@ export default function Chatbot() {
       const isFallback = data.wasFallback;
       
       // Siapkan pesan kosong untuk model beserta meta datanya
-      setMessages((prev) => [...prev, { 
+      const modelPlaceholder: Message = { 
         role: 'model', 
         parts: [{ text: '' }],
         usedModel: returnedModel,
         wasFallback: isFallback
-      }]);
-      setLoading(false); // Matikan titik-titik loading
-
-      // Simulasi efek ngetik yang sangat presisi dan stabil
-      let i = 0;
-      const typeSpeed = Math.max(1, Math.floor(responseText.length / 50)); // Dinamis, jika panjang maka lebih cepat
+      };
       
+      setMessages((prev) => [...prev, modelPlaceholder]);
+      setLoading(false);
+
+      let currentText = "";
+      let charIndex = 0;
       const timer = setInterval(() => {
-        i += typeSpeed;
-        if (i > responseText.length) i = responseText.length;
+        const charStep = Math.max(1, Math.floor(responseText.length / 50));
+        charIndex += charStep;
         
-        const currentText = responseText.substring(0, i);
-        
+        if (charIndex > responseText.length) charIndex = responseText.length;
+        currentText = responseText.substring(0, charIndex);
+
         setMessages((prev) => {
-          const updated = [...prev];
-          const lastIndex = updated.length - 1;
-          if (updated[lastIndex].role === 'model') {
-            updated[lastIndex] = { ...updated[lastIndex], parts: [{ text: currentText }] };
+          const newMessages = [...prev];
+          const lastIdx = newMessages.length - 1;
+          if (lastIdx >= 0 && newMessages[lastIdx].role === 'model') {
+            newMessages[lastIdx] = { 
+              ...newMessages[lastIdx], 
+              parts: [{ text: currentText }] 
+            };
           }
-          return updated;
+          return newMessages;
         });
 
-        if (i >= responseText.length) {
+        if (charIndex >= responseText.length) {
           clearInterval(timer);
         }
       }, 30);
@@ -181,13 +185,6 @@ export default function Chatbot() {
                       )}
                     </div>
                     
-                    {/* Model Badge */}
-                    {m.role === 'model' && m.usedModel && (
-                      <div className="text-[9px] font-semibold text-slate-400 mt-0.5 ml-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[10px]">bolt</span> 
-                        {m.usedModel === 'LLAMA3_8B' ? 'Groq Llama-3-8B' : m.usedModel === 'LLAMA3_70B' ? 'Groq Llama-3-70B' : m.usedModel === 'MIXTRAL' ? 'Groq Mixtral' : 'Groq Gemma'}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
