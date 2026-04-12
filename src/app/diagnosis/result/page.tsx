@@ -379,7 +379,7 @@ export default function ResultPage() {
 
               {/* Map Preview */}
               <div className="relative h-48 rounded-3xl overflow-hidden bg-slate-200 group">
-                <img alt="Map showing medical centers" className="w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBjazzDWWdEt0z6qBSKWT_GDLs8hRZDZP0XD80Nb4sON5CGv0Mx2iFxfTRDZAYNw6elSayUvlOzeCBjW7Hhf2e6VlW0cELU8BYR1qUg1ohvVdlMiHCp4s8mfjesJCxoG7-TAMuUC8OSeKuShWIkdwovl1IUWmc9hW7pT0qard1NuDCn_k9ZvDWiWieOhLEwjDcrxzhedSzmxeAoxijGVXeAcT6a9KywBg0nQdqKI2BhJHj7PaOtt4Cik6Ozqqq5dKYIcXir41GjVsh" />
+                <img alt="Map showing medical centers" loading="lazy" className="w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBjazzDWWdEt0z6qBSKWT_GDLs8hRZDZP0XD80Nb4sON5CGv0Mx2iFxfTRDZAYNw6elSayUvlOzeCBjW7Hhf2e6VlW0cELU8BYR1qUg1ohvVdlMiHCp4s8mfjesJCxoG7-TAMuUC8OSeKuShWIkdwovl1IUWmc9hW7pT0qard1NuDCn_k9ZvDWiWieOhLEwjDcrxzhedSzmxeAoxijGVXeAcT6a9KywBg0nQdqKI2BhJHj7PaOtt4Cik6Ozqqq5dKYIcXir41GjVsh" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
                   <div className="text-white">
                     <p className="text-xs font-bold uppercase tracking-widest opacity-80">Terdekat</p>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chatService } from "../../../utils/gemini";
+import { chatModel } from "../../../utils/gemini";
 
 export const dynamic = 'force-dynamic';
 
@@ -12,10 +12,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong." }, { status: 400 });
     }
 
-    const response = await chatService(message, history || []);
-    return NextResponse.json({ response });
+    const chat = chatModel.startChat({
+      history: history?.length > 0 ? history : undefined,
+    });
+
+    const result = await chat.sendMessage(message);
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json({ response: text });
   } catch (error) {
     console.error("Chat API Error:", error);
-    return NextResponse.json({ error: "Terjadi kesalahan saat menghubungi asisten AI." }, { status: 500 });
+    return NextResponse.json({ error: "Aduh, maaf banget ya kak.. sistem aku (Vitara) lagi ada kendala jaringan nih. Boleh tunggu sebentar dan coba tanyakan lagi ya! 🙏" }, { status: 500 });
   }
 }

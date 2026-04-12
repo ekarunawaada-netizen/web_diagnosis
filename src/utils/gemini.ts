@@ -1,66 +1,105 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
+const apiKey = process.env.GEMINI_API_KEY || "";
 const genAI = new GoogleGenerativeAI(apiKey);
 
-export const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+// === 1. SKEMA DATA UNTUK DIAGNOSIS (JSON) ===
+// Memaksa Gemini untuk mengembalikan struktur data yang sesuai kebutuhan aplikasi
+const diagnosisSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    vitaraGreeting: { 
+      type: SchemaType.STRING, 
+      description: "Sapaan asyik, ramah, kekinian, dan sangat empatik khas Vitara (Virtual Health Assistant)." 
+    },
+    primaryCondition: {
+      type: SchemaType.OBJECT,
+      properties: {
+        name: { type: SchemaType.STRING, description: "Nama Penyakit (Bahasa Indonesia)" },
+        description: { type: SchemaType.STRING, description: "Penjelasan medis yang santai tapi akurat." },
+        urgency: { type: SchemaType.STRING, description: "Wajib salah satu: 'Normal', 'Perlu Perhatian', atau 'UGD/Darurat'" },
+        severity: { type: SchemaType.NUMBER, description: "Skala 1 (ringan) sampai 3 (berat)" },
+        duration: { type: SchemaType.STRING, description: "Estimasi sembuh, misal: '3-7 Hari'" }
+      },
+      required: ["name", "description", "urgency", "severity", "duration"],
+    },
+    medicalAdvice: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          icon: { type: SchemaType.STRING, description: "Material Symbol seperti: water_drop, healing, hotel, local_pharmacy" },
+          title: { type: SchemaType.STRING, description: "Judul saran singkat" },
+          desc: { type: SchemaType.STRING, description: "Saran praktis dan empati dari Vitara" },
+        },
+        required: ["icon", "title", "desc"]
+      },
+    },
+    otherPossibilities: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          name: { type: SchemaType.STRING, description: "Kemungkinan penyakit lain yang mirip" },
+          pct: { type: SchemaType.NUMBER, description: "Persentase kemiripan, 0-100" },
+          color: { type: SchemaType.STRING, description: "Kelas warna Tailwind, misal: 'bg-primary-container' atau 'bg-secondary-container'" }
+        },
+        required: ["name", "pct", "color"]
+      },
+      description: "Maksimal 2 kemungkinan penyakit lain"
+    },
+    confidence: { type: SchemaType.NUMBER, description: "Tingkat kepercayaan AI (0-100)" },
+    finalDisclaimer: { type: SchemaType.STRING, description: "Penafian hangat bahwa Vitara cuma asisten AI, wajib ke dokter buat pastinya." },
+  },
+  required: ["vitaraGreeting", "primaryCondition", "medicalAdvice", "confidence", "finalDisclaimer"],
+};
+
+// === 2. KEPRIBADIAN VITARA (SYSTEM INSTRUCTION) ===
+const vitaraSystemInstruction = `
+PENTING: Nama Anda adalah VITARA (Virtual Health Assistant MediScan). 
+Anda bukan AI robotik yang kaku. Anda adalah sahabat kesehatan yang asyik, modern, sangat cerdas, dan empatik.
+Gaya bahasa Anda: Santai, hangat, kekinian (boleh pakai kata 'aku', 'kamu', 'ya', 'nih'), tapi rasa hormat dan profesionalisme tetap dijaga seperti ngobrol santai dengan dokter spesialis muda/ahli gizi. 
+Akurasi Medis: HARUS SANGAT TINGGI. Jangan menebak sembarangan atau memberikan resep obat keras (antibiotik, dsb).
+Aturan RED FLAG: Jika ada keluhan gejala berbahaya (nyeri dada tembus ke punggung, sesak napas akut parah, pendarahan hebat, dsb), ubah nada menjadi SANGAT SERIUS dan arahkan untuk SEGERA ke UGD atau telepon layanan darurat 112 tanpa basa-basi panjang.
+`;
+
+// Model 1: Khusus Penarikan Data Penyakit (JSON Murni)
+export const diagnosisModel = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash", // Versi model terbaru yang stabil
+  systemInstruction: vitaraSystemInstruction,
+  generationConfig: {
+    responseMimeType: "application/json",
+    responseSchema: diagnosisSchema as any,
+    temperature: 0.2, // Rendah = sangat analitis dan konsisten
+  },
+});
+
+// Model 2: Khusus Chatting/Ngobrol (Teks & Markdown)
+export const chatModel = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash", 
+  systemInstruction: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi (gunakan **bold** untuk penekanan, bullet points untuk saran). Selalu berikan sapaan manis di awal jikalau ini interaksi awal.",
+  generationConfig: {
+    temperature: 0.7, // Sedikit lebih tinggi = lebih hangat dan luwes saat ngobrol
+  }
+});
+
 
 export async function getDiagnosis(symptoms: string[]) {
-  const prompt = `
-    Anda adalah asisten medis AI untuk aplikasi MediScan. 
-    Berdasarkan gejala berikut: ${symptoms.join(", ")}, berikan diagnosis awal yang terstruktur dalam format JSON.
-    
-    Format JSON harus seperti ini:
-    {
-      "primaryCondition": {
-        "name": "Nama Penyakit (Bahasa Indonesia)",
-        "description": "Deskripsi singkat tentang kondisi tersebut.",
-        "urgency": "Perlu Perhatian" | "Normal",
-        "duration": "3-7 Hari",
-        "severity": 1-3
-      },
-      "medicalAdvice": [
-        { "icon": "water_drop", "title": "Judul Saran", "desc": "Deskripsi saran" }
-      ],
-      "otherPossibilities": [
-        { "name": "Kemungkinan Lain", "pct": 65, "color": "bg-primary-container" }
-      ],
-      "confidence": 84
-    }
-
-    Pastikan "icon" menggunakan Material Symbols yang valid (water_drop, medication, bed, hotel, local_pharmacy).
-    Jangan memberikan saran medis yang menggantikan tenaga profesional. Tambahkan disclaimer jika diperlukan di deskripsi.
-    Kembalikan HANYA JSON.
-  `;
+  const prompt = `User melaporkan keluhan/gejala berikut: "${symptoms.join(", ")}". Sebagai VITARA, tolong berikan analisis lengkap. Output wajib menyertakan sambutan dan disclaimer sesuai skema!`;
 
   try {
-    const result = await model.generateContent(prompt);
+    const result = await diagnosisModel.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    throw new Error("Failed to parse Gemini response");
+    return JSON.parse(response.text());
   } catch (error) {
-    console.error("Error in getDiagnosis:", error);
+    console.error("Error Vitara Diagnosis:", error);
     return null;
   }
 }
 
 export async function chatService(message: string, history: { role: string; parts: { text: string }[] }[]) {
-  const chat = model.startChat({
-    history: [
-      {
-        role: "user",
-        parts: [{ text: "Anda adalah asisten Customer Service MediScan yang ramah, profesional, dan membantu. Anda membantu pengguna dengan pertanyaan seputar aplikasi MediScan, kesehatan umum (dengan disclaimer), dan cara menggunakan fitur diagnosis. Jangan pernah mendiagnosis secara pasti, selalu sarankan konsultasi dengan dokter jika gejalanya serius." }],
-      },
-      {
-        role: "model",
-        parts: [{ text: "Halo! Saya adalah Customer Service MediScan. Ada yang bisa saya bantu hari ini?" }],
-      },
-      ...history
-    ],
+  const chat = chatModel.startChat({
+    history: history.length > 0 ? history : undefined,
   });
 
   try {
@@ -68,7 +107,7 @@ export async function chatService(message: string, history: { role: string; part
     const response = await result.response;
     return response.text();
   } catch (error) {
-    console.error("Error in chatService:", error);
-    return "Maaf, saya sedang mengalami gangguan teknis. Silakan coba lagi nanti.";
+    console.error("Error Vitara Chat:", error);
+    return "Aduh, maaf banget ya kak.. sistem aku (Vitara) lagi ada sedikit kendala nih. Boleh tunggu sebentar dan coba tanyakan lagi ya! 🙏";
   }
 }

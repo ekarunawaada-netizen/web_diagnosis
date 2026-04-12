@@ -92,35 +92,6 @@ export default function Home() {
 
   return (
     <>
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-100%); }
-        }
-        .animate-marquee {
-          display: flex;
-          width: max-content;
-          animation: marquee 30s linear infinite;
-        }
-        .animate-marquee:hover {
-          animation-play-state: paused;
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(2deg); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        .animate-float-delayed {
-          animation: float 7s ease-in-out infinite;
-          animation-delay: 2s;
-        }
-        .animate-float-slow {
-          animation: float 9s ease-in-out infinite;
-          animation-delay: 1s;
-        }
-      `}</style>
 
       <Navbar />
       <main className="pt-16 bg-surface overflow-x-hidden">

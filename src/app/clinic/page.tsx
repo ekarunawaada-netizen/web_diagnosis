@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
-const ClinicMap = dynamic(() => import('@/components/ClinicMap'), { 
+const ClinicMap = dynamic(() => import('@/components/ClinicMap'), {
   ssr: false,
   loading: () => <div className="w-full h-full bg-slate-100 animate-pulse flex items-center justify-center text-slate-400 font-headline">Memuat Radar Klinik...</div>
 });
@@ -27,7 +27,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 function getClinicTags(tags: Record<string, string>): string[] {
   const result: string[] = [];
   const amenity = tags.amenity || '';
-  
+
   if (amenity === 'hospital') result.push('Rumah Sakit');
   else if (amenity === 'clinic') result.push('Klinik');
   else if (amenity === 'doctors') result.push('Dokter Praktek');
@@ -41,7 +41,7 @@ function getClinicTags(tags: Record<string, string>): string[] {
     const spec = tags['healthcare:speciality'].split(';')[0];
     result.push(spec.charAt(0).toUpperCase() + spec.slice(1));
   }
-  
+
   return result.slice(0, 3);
 }
 
@@ -70,7 +70,7 @@ async function fetchNearbyClinics(lat: number, lng: number, radiusMeters: number
   if (!response.ok) throw new Error('Overpass API gagal');
 
   const data = await response.json();
-  
+
   const clinics = data.elements
     .map((el: any, idx: number) => {
       const elLat = el.lat ?? el.center?.lat;
@@ -174,7 +174,7 @@ export default function ClinicPage() {
         try {
           // Fetch REAL nearby clinics from OpenStreetMap
           const realClinics = await fetchNearbyClinics(latitude, longitude, 5000);
-          
+
           if (realClinics.length === 0) {
             // Try wider radius if none found
             const widerClinics = await fetchNearbyClinics(latitude, longitude, 15000);
@@ -210,7 +210,7 @@ export default function ClinicPage() {
         <aside className="w-full md:w-[420px] lg:w-[480px] h-full overflow-y-auto bg-surface flex flex-col z-20 shadow-xl shadow-black/5">
           {/* Search & Filter */}
           <div className="p-6 space-y-4 bg-surface-container-lowest sticky top-0 z-30 shadow-sm border-b border-outline-variant/10">
-            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Cari Klinik Terdekat</h1>
+            <h1 className="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Cari Rumah sakit terdekat</h1>
             <div className="relative group">
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                 <span className="material-symbols-outlined text-outline">search</span>
@@ -228,10 +228,10 @@ export default function ClinicPage() {
                 onClick={handleFindNearby}
                 disabled={isTracking}
                 className={`w-full px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${isTracking
-                    ? 'bg-outline-variant text-white cursor-wait'
-                    : userLocation
-                      ? 'bg-tertiary text-on-tertiary shadow-md'
-                      : 'bg-primary text-on-primary hover:bg-on-primary-container'
+                  ? 'bg-outline-variant text-white cursor-wait'
+                  : userLocation
+                    ? 'bg-tertiary text-on-tertiary shadow-md'
+                    : 'bg-primary text-on-primary hover:bg-on-primary-container'
                   }`}
               >
                 {isTracking ? (
@@ -347,7 +347,7 @@ export default function ClinicPage() {
                 </div>
                 {selectedClinic?.id === clinic.id && (
                   <div className="grid grid-cols-1 gap-3 pt-4 border-t border-outline-variant/20 animate-in fade-in duration-300 slide-in-from-top-1">
-                    <a 
+                    <a
                       href={`https://www.google.com/maps/dir/?api=1${userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : ''}&destination=${clinic.lat},${clinic.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -368,10 +368,10 @@ export default function ClinicPage() {
 
         {/* Map View - Interactive Leaflet Radar */}
         <section className="flex-1 relative bg-slate-100 hidden md:block z-10">
-          <ClinicMap 
-            clinics={clinicList} 
-            userLocation={userLocation} 
-            selectedClinic={selectedClinic} 
+          <ClinicMap
+            clinics={clinicList}
+            userLocation={userLocation}
+            selectedClinic={selectedClinic}
           />
 
           {/* Radar Status Indicator */}

@@ -41,13 +41,13 @@ export default function RegisterPage() {
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-3">
                   <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjUHGtiWoqG5F3GwqH2gZUWlYIdGxPWe0pXc4pV9V7M5g-C4OYMJuwn8zWQkwkV_qTt1FvzKBNL-C_KP9jiXFuPfNSTUZvdCxl5Ja0tJOpSIgK6ppE4A19Qxd8ZyVJzemk8cuELvOjihnsPdsDlHEb5eZ0-lIv7piDUC4vNy91qiJ9KD89ZrdpgRZ-9WI2dW3xKK-Q8eGbtqS0OrgEqNlpB4mJ-dvPZyAnMH3wP96Kz9tM1tM8DvgnJb-B0XP4HrzvxkiJ6zqVk4sV" alt="professional female doctor" className="w-full h-full object-cover" />
+                    <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjUHGtiWoqG5F3GwqH2gZUWlYIdGxPWe0pXc4pV9V7M5g-C4OYMJuwn8zWQkwkV_qTt1FvzKBNL-C_KP9jiXFuPfNSTUZvdCxl5Ja0tJOpSIgK6ppE4A19Qxd8ZyVJzemk8cuELvOjihnsPdsDlHEb5eZ0-lIv7piDUC4vNy91qiJ9KD89ZrdpgRZ-9WI2dW3xKK-Q8eGbtqS0OrgEqNlpB4mJ-dvPZyAnMH3wP96Kz9tM1tM8DvgnJb-B0XP4HrzvxkiJ6zqVk4sV" alt="professional female doctor" className="w-full h-full object-cover" />
                   </div>
                   <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVQqwCofQ6YiioGo6TxyvdotLamaBykjwk6zWrQPcL1Vp-q28-P5yX-6t2fbshBAP1Ccym4Y55URSuRpJXMwcGxIQoXPYaQZmsodTYb38ceJxp_7C9Fcbt4mHCNUCILrEwZiNEr0ZOWhf_AZ7txNQH6PMVcwVjWlvuJ5yGI34jPvn0XCrkBnf6-n3PYMNJs4VM24nD1yASa3JomvnqwyisZT1D60OXmI2wj0izkzTQvxvtRV8ytSA6bpQ4lJk4X0-FSWCwTgE5aXRU" alt="confident male doctor" className="w-full h-full object-cover" />
+                    <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVQqwCofQ6YiioGo6TxyvdotLamaBykjwk6zWrQPcL1Vp-q28-P5yX-6t2fbshBAP1Ccym4Y55URSuRpJXMwcGxIQoXPYaQZmsodTYb38ceJxp_7C9Fcbt4mHCNUCILrEwZiNEr0ZOWhf_AZ7txNQH6PMVcwVjWlvuJ5yGI34jPvn0XCrkBnf6-n3PYMNJs4VM24nD1yASa3JomvnqwyisZT1D60OXmI2wj0izkzTQvxvtRV8ytSA6bpQ4lJk4X0-FSWCwTgE5aXRU" alt="confident male doctor" className="w-full h-full object-cover" />
                   </div>
                   <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK9IsYTRfk2z_GDbULxeEXZBTNW_6o5_y6cbgxoG7ADoF0eo7FOUp90MSlw52xfax-r9YrixCQ-V-WNL9qcbBE15zz_9-gbcBin0eJjNv2xL3ysFFXQHAm1rQ-Innw74cscmG1vvzLS7N9bYMveX5VBGufYI6V05MF0VO2WInEAmwGP8Ktho2xWCXc2Hk7zYTrm-LsXTMqgREbFQkuAMw446HYZzsKIcGd3FyDI_cv3kHe1X4WTkzToTDmfz3a06s2Iyp-n1OeH6Pi" alt="female medical professional" className="w-full h-full object-cover" />
+                    <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK9IsYTRfk2z_GDbULxeEXZBTNW_6o5_y6cbgxoG7ADoF0eo7FOUp90MSlw52xfax-r9YrixCQ-V-WNL9qcbBE15zz_9-gbcBin0eJjNv2xL3ysFFXQHAm1rQ-Innw74cscmG1vvzLS7N9bYMveX5VBGufYI6V05MF0VO2WInEAmwGP8Ktho2xWCXc2Hk7zYTrm-LsXTMqgREbFQkuAMw446HYZzsKIcGd3FyDI_cv3kHe1X4WTkzToTDmfz3a06s2Iyp-n1OeH6Pi" alt="female medical professional" className="w-full h-full object-cover" />
                   </div>
                 </div>
                 <p className="text-on-primary text-sm font-medium">Join 50k+ patients & clinicians</p>
@@ -57,7 +57,7 @@ export default function RegisterPage() {
             {/* Abstract Decorative Elements */}
             <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20 pointer-events-none">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe9LAxIV6ntx8JnulfW47L9Hmgyj45AIe_Dqwh4v-oqyJUBN7LJeGCeaqRtW80w3QvHRhxxvadOUoxO3MHnRYFELYobRbLq8gy4PMJuPZZblylqOoL0COMSd8eYD1m81GGYJamqOeIfvQxNwX_n1aXjqTTaiXhOqWRW2JNxM0eeIBnwdC5Dz8saAsFI6GYIU5JWAm9t_eFf6XVAOeVs3fNYfAo6ocJiV8v4CmJmt2Ms18bw-0MF5Q0bND1HRixUXWZkR7oacYnho1D" alt="abstract blue digital medical data visualization" className="w-full h-full object-cover mix-blend-overlay" />
+              <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe9LAxIV6ntx8JnulfW47L9Hmgyj45AIe_Dqwh4v-oqyJUBN7LJeGCeaqRtW80w3QvHRhxxvadOUoxO3MHnRYFELYobRbLq8gy4PMJuPZZblylqOoL0COMSd8eYD1m81GGYJamqOeIfvQxNwX_n1aXjqTTaiXhOqWRW2JNxM0eeIBnwdC5Dz8saAsFI6GYIU5JWAm9t_eFf6XVAOeVs3fNYfAo6ocJiV8v4CmJmt2Ms18bw-0MF5Q0bND1HRixUXWZkR7oacYnho1D" alt="abstract blue digital medical data visualization" className="w-full h-full object-cover mix-blend-overlay" />
             </div>
           </div>
 

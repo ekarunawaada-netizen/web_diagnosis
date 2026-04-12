@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'model';
@@ -35,17 +36,54 @@ export default function Chatbot() {
         body: JSON.stringify({ message: input, history: messages }),
       });
 
-      if (!response.ok) throw new Error("Gagal mengirim pesan");
-
       const data = await response.json();
-      const botMessage: Message = { role: 'model', parts: [{ text: data.response }] };
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal mengirim pesan");
+      }
+
+      const responseText = data.response;
+      
+      // Siapkan pesan kosong untuk model
+      setMessages((prev) => [...prev, { role: 'model', parts: [{ text: '' }] }]);
+      setLoading(false); // Matikan titik-titik loading
+
+      // Simulasi efek ngetik yang sangat presisi dan stabil
+      let i = 0;
+      const typeSpeed = Math.max(1, Math.floor(responseText.length / 50)); // Dinamis, jika panjang maka lebih cepat
+      
+      const timer = setInterval(() => {
+        i += typeSpeed;
+        if (i > responseText.length) i = responseText.length;
+        
+        const currentText = responseText.substring(0, i);
+        
+        setMessages((prev) => {
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          if (updated[lastIndex].role === 'model') {
+            updated[lastIndex] = { ...updated[lastIndex], parts: [{ text: currentText }] };
+          }
+          return updated;
+        });
+
+        if (i >= responseText.length) {
+          clearInterval(timer);
+        }
+      }, 30);
+      
+    } catch (error: any) {
       console.error(error);
-      const errorMessage: Message = { role: 'model', parts: [{ text: "Maaf, sistem sedang sibuk. Coba lagi nanti ya!" }] };
+      const errText = error.message.includes("Gagal") ? "Aduh, sistem lagi sibuk nih. Coba sapa aku lagi nanti ya!" : error.message;
+      const errorMessage: Message = { role: 'model', parts: [{ text: errText }] };
       setMessages((prev) => [...prev, errorMessage]);
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearHistory = () => {
+    if (confirm("Apakah Anda yakin ingin menghapus semua riwayat percakapan?")) {
+      setMessages([]);
     }
   };
 
@@ -53,92 +91,129 @@ export default function Chatbot() {
     <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[350px] md:w-[400px] h-[500px] bg-surface/90 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-white/60 flex flex-col overflow-hidden animate-in slide-in-from-bottom-12 fade-in duration-500 fill-mode-both">
+        <div className="mb-4 w-[350px] md:w-[400px] h-[550px] bg-surface/80 backdrop-blur-3xl rounded-[2.5rem] shadow-2xl border border-white/40 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300">
           {/* Header */}
-          <div className="p-6 bg-gradient-to-r from-primary to-secondary text-white shrink-0 flex items-center justify-between shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                <span className="material-symbols-outlined text-white">smart_toy</span>
+          <div className="p-5 bg-gradient-to-r from-primary via-primary to-primary-container text-white shrink-0 shadow-md relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-inner">
+                  <span className="material-symbols-outlined text-white">smart_toy</span>
+                </div>
+                <div>
+                  <h3 className="font-bold font-headline leading-tight text-white shadow-sm">MediScan Assistant</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+                    <p className="text-[10px] uppercase font-black tracking-widest text-white/80">Online</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold font-headline leading-tight">MediScan Assistant</h3>
-                <p className="text-[10px] uppercase font-black tracking-widest opacity-80">AI Customer Service</p>
+              <div className="flex gap-1">
+                {messages.length > 0 && (
+                  <button onClick={handleClearHistory} className="w-8 h-8 rounded-full hover:bg-white/20 transition-colors flex items-center justify-center text-white/90" title="Hapus Riwayat">
+                    <span className="material-symbols-outlined text-lg">delete_sweep</span>
+                  </button>
+                )}
+                <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full hover:bg-white/20 transition-colors flex items-center justify-center text-white">
+                  <span className="material-symbols-outlined text-xl">close</span>
+                </button>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full hover:bg-white/10 transition-colors flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl">close</span>
-            </button>
           </div>
 
-          {/* Messages */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
-            {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 opacity-60">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                   <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>chat_bubble</span>
+          {/* Messages Area */}
+          <div className="flex-1 bg-surface-container-lowest/50 relative overflow-hidden flex flex-col">
+            {/* Medical Disclaimer Alert */}
+            <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 flex gap-2 items-start shrink-0 backdrop-blur-sm">
+              <span className="material-symbols-outlined text-amber-600 text-[18px] mt-0.5 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+              <p className="text-[11px] text-amber-800 leading-tight font-medium">Asisten ini menggunakan AI. Saran yang diberikan <strong className="font-bold">bukan pengganti nasihat dokter profesional</strong>. Untuk kondisi darurat, hubungi 112.</p>
+            </div>
+
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-5 scroll-smooth">
+              {messages.length === 0 && (
+                <div className="h-full flex flex-col items-center justify-center text-center p-4 space-y-4 opacity-70">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center shadow-inner border border-primary/10">
+                     <span className="material-symbols-outlined text-3xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>support_agent</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-on-surface mb-1">Halo! Saya Siap Membantu</h4>
+                    <p className="text-xs font-medium text-on-surface-variant max-w-[200px] mx-auto">Tanyakan seputar gejala, tips kesehatan, atau cara pakai aplikasi ini.</p>
+                  </div>
                 </div>
-                <p className="text-sm font-medium text-on-surface-variant">Halo! Saya asisten MediScan. Ada yang bisa saya bantu hari ini?</p>
-              </div>
-            )}
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in zoom-in duration-300`}>
-                <div className={`max-w-[85%] px-5 py-3 rounded-2xl text-sm font-medium shadow-sm ${
-                  m.role === 'user' 
-                    ? 'bg-primary text-white rounded-tr-none' 
-                    : 'bg-surface-container-high text-on-surface rounded-tl-none border border-outline-variant/30'
-                }`}>
-                  {m.parts[0].text}
+              )}
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-300`}>
+                  {m.role === 'model' && (
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mr-2 border border-primary/20 mt-1">
+                      <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+                    </div>
+                  )}
+                  <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-[13.5px] shadow-sm leading-relaxed ${
+                    m.role === 'user' 
+                      ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-tr-none' 
+                      : 'bg-white text-on-surface rounded-tl-none border border-outline-variant/20 prose prose-sm prose-p:my-1 prose-ul:my-1 prose-strong:text-primary max-w-none w-full break-words prose-headings:text-on-surface prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-3 prose-li:my-0.5'
+                  }`}>
+                    {m.role === 'user' ? (
+                      m.parts[0].text
+                    ) : (
+                      <ReactMarkdown>{m.parts[0].text}</ReactMarkdown>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start animate-in fade-in duration-300">
-                <div className="bg-surface-container-high text-on-surface px-5 py-3 rounded-2xl rounded-tl-none border border-outline-variant/30 flex gap-1">
-                  <div className="w-1.5 h-1.5 bg-primary/40 rounded-full animate-bounce"></div>
-                  <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce delay-75"></div>
-                  <div className="w-1.5 h-1.5 bg-primary/80 rounded-full animate-bounce delay-150"></div>
+              ))}
+              {loading && (
+                <div className="flex justify-start animate-in fade-in duration-300 items-end">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mr-2 border border-primary/20">
+                    <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+                  </div>
+                  <div className="bg-white text-on-surface px-4 py-3 rounded-2xl rounded-tl-none border border-outline-variant/20 flex gap-1.5 items-center shadow-sm h-10">
+                    <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-bounce delay-75"></div>
+                    <div className="w-1.5 h-1.5 bg-primary/90 rounded-full animate-bounce delay-150"></div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Input */}
-          <div className="p-4 bg-surface border-t border-outline-variant/20 shrink-0">
+          {/* Input Area */}
+          <div className="p-4 bg-white/80 backdrop-blur-md border-t border-outline-variant/20 shrink-0">
             <div className="relative flex items-center gap-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Ketik pesan Anda..."
-                className="w-full pl-5 pr-14 py-3.5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-outline-variant text-sm font-medium"
+                placeholder="Tanya sesuatu..."
+                className="w-full pl-5 pr-14 py-3.5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all placeholder:text-outline-variant/70 text-sm font-medium shadow-inner"
               />
               <button 
                 onClick={handleSend}
                 disabled={loading || !input.trim()}
-                className="absolute right-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-all disabled:opacity-50 disabled:grayscale"
+                className="absolute right-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:hover:scale-100 shadow-md shadow-primary/20"
               >
-                <span className="material-symbols-outlined text-xl">send</span>
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Toggle Button */}
+      {/* Floating Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all duration-500 transform active:scale-90 ${
-          isOpen ? 'bg-error text-white rotate-90 scale-90' : 'bg-primary text-white hover:scale-110'
+        className={`w-16 h-16 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.2)] flex items-center justify-center transition-all duration-500 transform active:scale-90 ${
+          isOpen ? 'bg-error text-white rotate-90 scale-90' : 'bg-gradient-to-br from-primary to-primary-container text-white hover:scale-110 hover:shadow-primary/40'
         }`}
       >
-        <span className="material-symbols-outlined text-3xl">
-          {isOpen ? 'close' : 'chat'}
+        <span className="material-symbols-outlined text-3xl transition-transform duration-300" style={{ fontVariationSettings: "'FILL' 1" }}>
+          {isOpen ? 'close' : 'chat_bubble'}
         </span>
         {!isOpen && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-tertiary rounded-full border-2 border-white animate-pulse"></span>
+          <span className="absolute 0 top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
         )}
       </button>
     </div>
   );
 }
+
