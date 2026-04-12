@@ -17,11 +17,14 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    scrollToBottom();
   }, [messages, loading]);
 
   const handleSend = async () => {
@@ -159,7 +162,7 @@ export default function Chatbot() {
                 </div>
               )}
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-300`}>
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                   {m.role === 'model' && (
                     <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mr-2 border border-primary/20 mt-1">
                       <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
@@ -189,7 +192,7 @@ export default function Chatbot() {
                 </div>
               ))}
               {loading && (
-                <div className="flex justify-start animate-in fade-in duration-300 items-end">
+                <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300 items-end">
                   {/* Avatar Vitara */}
                   <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mr-2 border border-primary/20 mt-1">
                     <span className="material-symbols-outlined text-[14px] text-primary animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -214,6 +217,7 @@ export default function Chatbot() {
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} className="h-2 w-full" />
             </div>
           </div>
 
