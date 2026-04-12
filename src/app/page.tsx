@@ -44,6 +44,7 @@ export default function Home() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({ text: '', rating: 5 });
+  const [showAll, setShowAll] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -311,8 +312,8 @@ export default function Home() {
                </div>
                
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 {testimonials.map((t, idx) => (
-                   <div key={t.id} className={`rounded-3xl p-8 border hover:-translate-y-2 transition-all duration-300 ${t.transform || ''} bg-surface border-outline-variant/20 hover:border-primary/30 hover:shadow-xl`}>
+                                   {testimonials.slice(0, showAll ? testimonials.length : 3).map((t, idx) => (
+                                       <div key={t.id} className={`rounded-3xl p-6 md:p-8 border hover:-translate-y-2 transition-all duration-300 ${t.transform || ''} bg-surface border-outline-variant/20 hover:border-primary/30 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500`} style={{ animationDelay: `${idx * 100}ms` }}>
                       <div className="flex gap-1 mb-6 text-tertiary">
                          {Array.from({ length: 5 }).map((_, i) => (
                            <span key={i} className="material-symbols-outlined text-lg" style={{ fontVariationSettings: i < t.rating ? "'FILL' 1" : "'FILL' 0" }}>star</span>
@@ -333,6 +334,20 @@ export default function Home() {
                    </div>
                  ))}
                </div>
+
+                {testimonials.length > 3 && (
+                  <div className="mt-12 text-center">
+                    <button 
+                      onClick={() => setShowAll(!showAll)}
+                      className="inline-flex items-center gap-2 px-8 py-3.5 bg-surface-container-highest text-on-surface-variant font-bold rounded-2xl hover:bg-outline-variant/10 transition-all active:scale-95 border border-outline-variant/10 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined transition-transform duration-300" style={{ transform: showAll ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                        expand_more
+                      </span>
+                      {showAll ? 'Lihat Sedikit' : `Lihat ${testimonials.length - 3} Ulasan Lainnya`}
+                    </button>
+                  </div>
+                )}
 
                {/* Login Prompt Modal */}
                {showLoginPrompt && mounted && (
