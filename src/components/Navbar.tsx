@@ -58,8 +58,8 @@ export default function Navbar() {
             {/* Notification Dropdown */}
             {isNotifOpen && (
               <>
-                <div className="fixed inset-0 z-40 md:hidden" onClick={closeMenus}></div>
-                <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 transform origin-top-right transition-all">
+                <div className="fixed inset-0 z-40" onClick={closeMenus}></div>
+                <div className="fixed inset-x-4 md:absolute md:inset-x-auto md:right-0 mt-2 w-auto md:w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden z-50 transform origin-top-right transition-all">
                   <div className="p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 flex justify-between items-center">
                     <h3 className="font-semibold text-slate-800 dark:text-slate-200">Notifikasi</h3>
                     <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-full font-medium">1 Baru</span>
