@@ -58,7 +58,8 @@ const diagnosisSchema = {
 export const AVAILABLE_MODELS = {
   FLASH: "gemini-1.5-flash",
   PRO: "gemini-1.5-pro",
-  GEMMA: "gemma-7b-it"
+  GEMMA: "gemma-7b-it",
+  GEMMA_4: "gemma-4-31b"
 } as const;
 
 export type ModelType = keyof typeof AVAILABLE_MODELS;
@@ -100,12 +101,17 @@ export function getVitaraModel(type: 'diagnosis' | 'chat', modelKey: ModelType =
     });
   }
 
+  const systemPrompt = modelKey === 'GEMMA_4' 
+    ? "Kamu adalah asisten teknis berbasis Gemma. Berikan jawaban yang logis, teknis, dan langsung ke poin."
+    : vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi (gunakan **bold** untuk penekanan, bullet points untuk saran). Selalu berikan sapaan manis di awal jikalau ini interaksi awal.";
+
   return genAI.getGenerativeModel({
     model: modelName,
-    systemInstruction: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi (gunakan **bold** untuk penekanan, bullet points untuk saran). Selalu berikan sapaan manis di awal jikalau ini interaksi awal.",
+    systemInstruction: systemPrompt,
     generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2000, // Membatasi agar tidak terlalu panjang
+      temperature: modelKey === 'GEMMA_4' ? 0.4 : 0.7,
+      topP: modelKey === 'GEMMA_4' ? 0.9 : 1,
+      maxOutputTokens: 1000,
     }
   });
 }

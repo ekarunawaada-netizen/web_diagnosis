@@ -116,14 +116,14 @@ export default function Chatbot() {
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
                       <p className="text-[9px] uppercase font-black tracking-widest text-white/90">
-                        {selectedModel === 'FLASH' ? 'Gemini Flash' : selectedModel === 'PRO' ? 'Gemini Pro' : 'Gemma 7B'}
+                        {selectedModel === 'FLASH' ? 'Gemini Flash' : selectedModel === 'PRO' ? 'Gemini Pro' : selectedModel === 'GEMMA' ? 'Gemma 7B' : 'Gemma 4 31B'}
                       </p>
                       <span className="material-symbols-outlined text-[12px] text-white/70 group-hover:text-white transition-transform duration-300">expand_more</span>
                     </button>
 
                     {/* Model Picker Tooltip/Dropdown */}
                     {showModelPicker && (
-                      <div className="absolute top-full left-0 mt-2 w-40 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200 py-1">
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200 py-1">
                         {(Object.keys(AVAILABLE_MODELS) as ModelType[]).map((key) => (
                           <button
                             key={key}
@@ -137,7 +137,7 @@ export default function Chatbot() {
                                 : 'text-slate-600 hover:bg-slate-50'
                             }`}
                           >
-                            {key === 'FLASH' ? 'Fast (Flash)' : key === 'PRO' ? 'Smart (Pro)' : 'Light (Gemma)'}
+                            {key === 'FLASH' ? 'Fast (Flash)' : key === 'PRO' ? 'Smart (Pro)' : key === 'GEMMA' ? 'Light (Gemma)' : 'Tech (Gemma 4)'}
                             {selectedModel === key && <span className="material-symbols-outlined text-[14px]">check</span>}
                           </button>
                         ))}
