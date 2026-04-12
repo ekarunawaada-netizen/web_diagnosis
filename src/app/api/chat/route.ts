@@ -6,14 +6,14 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { message, history, model: requestedModel } = body;
+    const { message, history } = body;
     
     if (!message) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong." }, { status: 400 });
     }
 
-    // Panggil chatService dengan menyertakan pilihan model
-    const result = await chatService(message, history, requestedModel);
+    // Panggil chatService (Otomatis menggunakan fallback chain di sisi server)
+    const result = await chatService(message, history);
 
     return NextResponse.json({ 
       response: result.text,

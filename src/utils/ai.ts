@@ -10,8 +10,8 @@ import { AVAILABLE_MODELS, ModelType } from "./ai-constants";
 export { AVAILABLE_MODELS };
 export type { ModelType };
 
-// Urutan fallback jika model utama terkena rate limit
-const FALLBACK_CHAIN: ModelType[] = ['LLAMA3_8B', 'MIXTRAL', 'GEMMA', 'LLAMA3_70B'];
+// Urutan fallback otomatis: Mulai dari yang teratas (terpintar) ke bawah
+const FALLBACK_CHAIN: ModelType[] = ['LLAMA3_70B', 'LLAMA3_8B', 'MIXTRAL'];
 
 // === KEPRIBADIAN VITARA ===
 const vitaraSystemInstruction = `
@@ -95,7 +95,6 @@ export async function getDiagnosis(symptoms: string[]) {
 export async function chatService(
   message: string,
   history: { role: string; parts: { text: string }[] }[], // format lama dari gemini
-  modelKey: ModelType = 'LLAMA3_8B'
 ) {
   // Ubah history dari format Gemini ke format OpenAI/Groq
   const groqHistory = history.map((item) => ({
@@ -112,7 +111,7 @@ export async function chatService(
     { role: "user", content: message }
   ];
 
-  const modelsToTry = getFallbackSequence(modelKey);
+  const modelsToTry = FALLBACK_CHAIN;
 
   for (let i = 0; i < modelsToTry.length; i++) {
     const currentModelKey = modelsToTry[i];

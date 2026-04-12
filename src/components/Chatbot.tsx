@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { AVAILABLE_MODELS, ModelType } from '@/utils/ai-constants';
+
 
 interface Message {
   role: 'user' | 'model';
@@ -16,8 +16,6 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ModelType>('LLAMA3_8B');
-  const [showModelPicker, setShowModelPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,7 +39,6 @@ export default function Chatbot() {
         body: JSON.stringify({ 
           message: input, 
           history: messages,
-          model: selectedModel 
         }),
       });
 
@@ -118,40 +115,9 @@ export default function Chatbot() {
                 </div>
                 <div>
                   <h3 className="font-bold font-headline leading-tight text-white shadow-sm">MediScan Assistant</h3>
-                  <div className="flex items-center gap-1.5 mt-0.5 relative">
-                    <button 
-                      onClick={() => setShowModelPicker(!showModelPicker)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 transition-all border border-white/20 group"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-                      <p className="text-[9px] uppercase font-black tracking-widest text-white/90">
-                        {selectedModel === 'LLAMA3_8B' ? 'Llama 3 8B' : selectedModel === 'LLAMA3_70B' ? 'Llama 3 70B' : selectedModel === 'MIXTRAL' ? 'Mixtral' : 'Gemma 7B'}
-                      </p>
-                      <span className="material-symbols-outlined text-[12px] text-white/70 group-hover:text-white transition-transform duration-300">expand_more</span>
-                    </button>
-
-                    {/* Model Picker Tooltip/Dropdown */}
-                    {showModelPicker && (
-                      <div className="absolute top-full left-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200 py-1">
-                        {(Object.keys(AVAILABLE_MODELS) as ModelType[]).map((key) => (
-                          <button
-                            key={key}
-                            onClick={() => {
-                              setSelectedModel(key);
-                              setShowModelPicker(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors flex items-center justify-between ${
-                              selectedModel === key 
-                                ? 'bg-primary/10 text-primary' 
-                                : 'text-slate-600 hover:bg-slate-50'
-                            }`}
-                          >
-                            {key === 'LLAMA3_8B' ? 'Llama 8B (Cepat)' : key === 'LLAMA3_70B' ? 'Llama 70B (Pintar)' : key === 'MIXTRAL' ? 'Mixtral 8x7B' : 'Gemma 7B (Ringan)'}
-                            {selectedModel === key && <span className="material-symbols-outlined text-[14px]">check</span>}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-white/80">Online & Ready</p>
                   </div>
                 </div>
               </div>
