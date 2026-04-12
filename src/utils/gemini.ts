@@ -87,7 +87,7 @@ GAYA PENULISAN (WAJIB):
 // Fungsi helper untuk mendapatkan model tertentu
 export function getVitaraModel(type: 'diagnosis' | 'chat', modelKey: ModelType = 'FLASH') {
   const modelName = AVAILABLE_MODELS[modelKey] || AVAILABLE_MODELS.FLASH;
-  
+
   if (type === 'diagnosis') {
     return genAI.getGenerativeModel({
       model: modelName,
@@ -105,6 +105,7 @@ export function getVitaraModel(type: 'diagnosis' | 'chat', modelKey: ModelType =
     systemInstruction: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi (gunakan **bold** untuk penekanan, bullet points untuk saran). Selalu berikan sapaan manis di awal jikalau ini interaksi awal.",
     generationConfig: {
       temperature: 0.7,
+      maxOutputTokens: 2000, // Membatasi agar tidak terlalu panjang
     }
   });
 }
@@ -127,7 +128,7 @@ export async function getDiagnosis(symptoms: string[]) {
 }
 
 export async function chatService(
-  message: string, 
+  message: string,
   history: { role: string; parts: { text: string }[] }[],
   modelKey: ModelType = 'FLASH'
 ) {
