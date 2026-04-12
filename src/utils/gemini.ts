@@ -8,9 +8,9 @@ const genAI = new GoogleGenerativeAI(apiKey);
 const diagnosisSchema = {
   type: SchemaType.OBJECT,
   properties: {
-    vitaraGreeting: { 
-      type: SchemaType.STRING, 
-      description: "Sapaan asyik, ramah, kekinian, dan sangat empatik khas Vitara (Virtual Health Assistant)." 
+    vitaraGreeting: {
+      type: SchemaType.STRING,
+      description: "Sapaan asyik , ramah, kekinian, dan sangat empatik khas Vitara (Virtual Health Assistant)."
     },
     primaryCondition: {
       type: SchemaType.OBJECT,
@@ -54,7 +54,15 @@ const diagnosisSchema = {
   required: ["vitaraGreeting", "primaryCondition", "medicalAdvice", "confidence", "finalDisclaimer"],
 };
 
-// === 2. KEPRIBADIAN VITARA (SYSTEM INSTRUCTION) ===
+// === 2. KONFIGURASI MODEL & KEPRIBADIAN VITARA ===
+export const AVAILABLE_MODELS = {
+  FLASH: "gemini-1.5-flash",
+  PRO: "gemini-1.5-pro",
+  GEMMA: "gemma-7b-it"
+} as const;
+
+export type ModelType = keyof typeof AVAILABLE_MODELS;
+
 const vitaraSystemInstruction = `
 PENTING: Nama Anda adalah VITARA (Virtual Health Assistant MediScan). 
 Anda adalah sahabat kesehatan yang asyik, modern, cerdas, dan empatik.
@@ -76,26 +84,34 @@ GAYA PENULISAN (WAJIB):
 5. ATURAN RED FLAG (SANGAT PENTING): Jika ada keluhan gejala berbahaya (nyeri dada tembus ke punggung, sesak napas akut parah, pendarahan hebat, dsb), JANGAN pakai emoji santai. Langsung ubah nada menjadi SANGAT SERIUS dan arahkan untuk SEGERA ke UGD atau telepon layanan darurat 112.
 `;
 
-// Model 1: Khusus Penarikan Data Penyakit (JSON Murni)
-export const diagnosisModel = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash", // Versi model terbaru yang stabil
-  systemInstruction: vitaraSystemInstruction,
-  generationConfig: {
-    responseMimeType: "application/json",
-    responseSchema: diagnosisSchema as any,
-    temperature: 0.2, // Rendah = sangat analitis dan konsisten
-  },
-});
-
-// Model 2: Khusus Chatting/Ngobrol (Teks & Markdown)
-export const chatModel = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash", 
-  systemInstruction: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi (gunakan **bold** untuk penekanan, bullet points untuk saran). Selalu berikan sapaan manis di awal jikalau ini interaksi awal.",
-  generationConfig: {
-    temperature: 0.7, // Sedikit lebih tinggi = lebih hangat dan luwes saat ngobrol
+// Fungsi helper untuk mendapatkan model tertentu
+export function getVitaraModel(type: 'diagnosis' | 'chat', modelKey: ModelType = 'FLASH') {
+  const modelName = AVAILABLE_MODELS[modelKey] || AVAILABLE_MODELS.FLASH;
+  
+  if (type === 'diagnosis') {
+    return genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: vitaraSystemInstruction,
+      generationConfig: {
+        responseMimeType: "application/json",
+        responseSchema: diagnosisSchema as any,
+        temperature: 0.2,
+      },
+    });
   }
-});
 
+  return genAI.getGenerativeModel({
+    model: modelName,
+    systemInstruction: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi (gunakan **bold** untuk penekanan, bullet points untuk saran). Selalu berikan sapaan manis di awal jikalau ini interaksi awal.",
+    generationConfig: {
+      temperature: 0.7,
+    }
+  });
+}
+
+// Model default untuk kompatibilitas ke belakang
+export const diagnosisModel = getVitaraModel('diagnosis', 'FLASH');
+export const chatModel = getVitaraModel('chat', 'FLASH');
 
 export async function getDiagnosis(symptoms: string[]) {
   const prompt = `User melaporkan keluhan/gejala berikut: "${symptoms.join(", ")}". Sebagai VITARA, tolong berikan analisis lengkap. Output wajib menyertakan sambutan dan disclaimer sesuai skema!`;
@@ -110,8 +126,13 @@ export async function getDiagnosis(symptoms: string[]) {
   }
 }
 
-export async function chatService(message: string, history: { role: string; parts: { text: string }[] }[]) {
-  const chat = chatModel.startChat({
+export async function chatService(
+  message: string, 
+  history: { role: string; parts: { text: string }[] }[],
+  modelKey: ModelType = 'FLASH'
+) {
+  const model = getVitaraModel('chat', modelKey);
+  const chat = model.startChat({
     history: history.length > 0 ? history : undefined,
   });
 

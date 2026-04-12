@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { AVAILABLE_MODELS, ModelType } from '@/utils/gemini';
 
 interface Message {
   role: 'user' | 'model';
@@ -13,6 +14,8 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ModelType>('FLASH');
+  const [showModelPicker, setShowModelPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,7 +36,11 @@ export default function Chatbot() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input, history: messages }),
+        body: JSON.stringify({ 
+          message: input, 
+          history: messages,
+          model: selectedModel 
+        }),
       });
 
       const data = await response.json();
@@ -102,9 +109,40 @@ export default function Chatbot() {
                 </div>
                 <div>
                   <h3 className="font-bold font-headline leading-tight text-white shadow-sm">MediScan Assistant</h3>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                    <p className="text-[10px] uppercase font-black tracking-widest text-white/80">Online</p>
+                  <div className="flex items-center gap-1.5 mt-0.5 relative">
+                    <button 
+                      onClick={() => setShowModelPicker(!showModelPicker)}
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 transition-all border border-white/20 group"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                      <p className="text-[9px] uppercase font-black tracking-widest text-white/90">
+                        {selectedModel === 'FLASH' ? 'Gemini Flash' : selectedModel === 'PRO' ? 'Gemini Pro' : 'Gemma 7B'}
+                      </p>
+                      <span className="material-symbols-outlined text-[12px] text-white/70 group-hover:text-white transition-transform duration-300">expand_more</span>
+                    </button>
+
+                    {/* Model Picker Tooltip/Dropdown */}
+                    {showModelPicker && (
+                      <div className="absolute top-full left-0 mt-2 w-40 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/40 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200 py-1">
+                        {(Object.keys(AVAILABLE_MODELS) as ModelType[]).map((key) => (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              setSelectedModel(key);
+                              setShowModelPicker(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider transition-colors flex items-center justify-between ${
+                              selectedModel === key 
+                                ? 'bg-primary/10 text-primary' 
+                                : 'text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            {key === 'FLASH' ? 'Fast (Flash)' : key === 'PRO' ? 'Smart (Pro)' : 'Light (Gemma)'}
+                            {selectedModel === key && <span className="material-symbols-outlined text-[14px]">check</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

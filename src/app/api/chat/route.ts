@@ -1,24 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chatModel } from "../../../utils/gemini";
+import { chatService } from "../../../utils/gemini";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { message, history } = body;
+    const { message, history, model: requestedModel } = body;
     
     if (!message) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong." }, { status: 400 });
     }
 
-    const chat = chatModel.startChat({
-      history: history?.length > 0 ? history : undefined,
-    });
-
-    const result = await chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
+    // Panggil chatService dengan menyertakan pilihan model
+    const text = await chatService(message, history, requestedModel);
 
     return NextResponse.json({ response: text });
   } catch (error) {
