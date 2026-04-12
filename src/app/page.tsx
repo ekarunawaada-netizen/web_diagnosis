@@ -105,7 +105,7 @@ export default function Home() {
             <div className="absolute top-[40%] left-[20%] w-[300px] h-[300px] rounded-full bg-secondary-container/20 blur-[60px]"></div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 py-20">
+          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10 py-12 md:py-20">
             
             {/* Left Box: Copywriting */}
             <div className={`space-y-8 transition-all duration-1000 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
@@ -117,7 +117,7 @@ export default function Home() {
                 Revolusi Deteksi Medis Berbasis Kecerdasan
               </div>
               
-              <h1 className="text-5xl md:text-[5.5rem] font-black font-headline leading-[1.05] text-on-surface tracking-tighter">
+              <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-[5.5rem] font-black font-headline leading-[1.05] text-on-surface tracking-tighter">
                 Kesehatan Anda,<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-tertiary animate-gradient">
                   Prioritas Utama
@@ -225,11 +225,11 @@ export default function Home() {
         </section>
 
         {/* BENTO GRID FEATURES SECTION */}
-        <section className="py-32 bg-surface relative z-10">
+        <section className="py-20 md:py-32 bg-surface relative z-10">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-20 space-y-5">
+            <div className="text-center mb-16 md:mb-20 space-y-5">
               <span className="text-primary font-bold tracking-widest uppercase text-sm">Keunggulan Website kami </span>
-              <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tighter text-on-surface">Dirancang melampaui Aplikasi Biasa.</h2>
+              <h2 className="text-3xl md:text-5xl font-black font-headline tracking-tighter text-on-surface">Dirancang melampaui Aplikasi Biasa.</h2>
               <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">MediScan membantu Anda memahami kondisi kesehatan secara praktis, cepat, dan terpercaya.</p>
             </div>
             
@@ -237,7 +237,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto">
               
               {/* Box 1 (Span 2 Cols, 1 Row) - Diagnosis AI */}
-              <div className="md:col-span-2 bg-surface-container-highest rounded-[2.5rem] p-8 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 overflow-hidden relative group flex flex-col justify-center">
+              <div className="md:col-span-2 bg-surface-container-highest rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 overflow-hidden relative group flex flex-col justify-center">
                 <div className="relative z-10 w-full md:w-2/3">
                   <div className="w-16 h-16 rounded-2xl bg-primary text-white flex items-center justify-center mb-6 shadow-lg shadow-primary/30 relative z-20">
                     <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
@@ -251,7 +251,7 @@ export default function Home() {
               </div>
 
               {/* Box 2 (Standard) - Security */}
-              <div className="bg-gradient-to-br from-tertiary to-tertiary-container rounded-[2.5rem] p-10 text-on-tertiary-container shadow-md hover:shadow-[0_20px_40px_rgba(92,107,192,0.2)] hover:scale-[1.03] transition-all duration-500 flex flex-col justify-center items-start group relative overflow-hidden">
+              <div className="bg-gradient-to-br from-tertiary to-tertiary-container rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 text-on-tertiary-container shadow-md hover:shadow-[0_20px_40px_rgba(92,107,192,0.2)] hover:scale-[1.03] transition-all duration-500 flex flex-col justify-center items-start group relative overflow-hidden">
                 <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md text-white flex items-center justify-center mb-6 shadow-lg relative z-20 group-hover:bg-white/30 transition-colors">
                   <span className="material-symbols-outlined text-4xl group-hover:animate-bounce" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_good</span>
                 </div>
@@ -414,7 +414,7 @@ export default function Home() {
               <div className="absolute bottom-0 left-0 w-96 h-96 bg-tertiary rounded-full blur-[120px] opacity-30 group-hover:opacity-50 transition-opacity duration-1000 -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
               
               <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-                <h2 className="text-4xl md:text-6xl font-black font-headline leading-tight tracking-tighter">
+                <h2 className="text-3xl md:text-6xl font-black font-headline leading-tight tracking-tighter">
                   Mulai Analisis Kesehatan Anda Sekarang
                 </h2>
                 <p className="text-xl text-slate-300 font-medium leading-relaxed">

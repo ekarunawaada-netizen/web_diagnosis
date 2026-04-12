@@ -111,7 +111,7 @@ export default function Chatbot() {
     <div className="fixed bottom-6 right-4 md:right-6 z-[60] flex flex-col items-end">
       {/* Chat Window */}
       {isOpen && (
-        <div className="mb-4 w-[calc(100vw-2rem)] sm:w-[350px] md:w-[400px] h-[550px] max-h-[80vh] bg-surface/80 backdrop-blur-3xl rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-white/40 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300">
+        <div className="mb-4 w-[calc(100vw-2rem)] sm:w-[350px] md:w-[400px] h-[min(550px,75vh)] bg-surface/80 backdrop-blur-3xl rounded-[2rem] md:rounded-[2.5rem] shadow-2xl border border-white/40 flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-300">
           {/* Header */}
           <div className="p-5 bg-gradient-to-r from-primary via-primary to-primary-container text-white shrink-0 shadow-md relative">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>

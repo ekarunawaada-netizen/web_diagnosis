@@ -314,16 +314,16 @@ export default function DiagnosisPage() {
             {/* Smart Search */}
             <div className="relative w-full max-w-lg mb-12">
               <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
-              <input
-                ref={searchRef}
-                className="w-full pl-14 pr-6 py-5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary font-medium text-on-surface transition-all outline-none shadow-lg shadow-primary/5 placeholder:text-outline-variant"
-                placeholder="Cari gejala utama Anda (contoh: Pusing, Demam, Mual)"
-                type="text"
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true); }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              />
+                <input
+                  ref={searchRef}
+                  className="w-full pl-12 md:pl-14 pr-6 py-4 md:py-5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary font-medium text-on-surface transition-all outline-none shadow-lg shadow-primary/5 placeholder:text-outline-variant text-sm md:text-base"
+                  placeholder="Cari gejala utama Anda (contoh: Pusing, Demam, Mual)"
+                  type="text"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                />
               {showSuggestions && filteredSuggestions.length > 0 && (
                 <div className="absolute left-0 right-0 top-full mt-2 bg-surface-container-lowest backdrop-blur-xl border border-outline-variant/30 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-[320px] overflow-y-auto">
                   {filteredSuggestions.map((s) => (
@@ -623,7 +623,7 @@ export default function DiagnosisPage() {
           <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-tertiary-container/10 blur-[80px]"></div>
         </div>
 
-        <div className={`w-full max-w-[640px] flex flex-col gap-8 relative z-10 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
+        <div className={`w-full max-w-[640px] flex flex-col gap-6 md:gap-8 relative z-10 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
 
           {/* Progress Tracker */}
           <div className="space-y-3">
@@ -643,7 +643,7 @@ export default function DiagnosisPage() {
 
           {/* Question Card */}
           {currentQuestion && (
-            <div className="bg-surface-container-lowest p-8 md:p-12 rounded-3xl shadow-[0_8px_32px_rgba(25,27,35,0.04)] border border-outline-variant/15">
+            <div className="bg-surface-container-lowest p-6 md:p-12 rounded-3xl shadow-[0_8px_32px_rgba(25,27,35,0.04)] border border-outline-variant/15">
               <div className="space-y-10">
                 {/* Category & Question */}
                 <div className="space-y-4">
@@ -651,10 +651,10 @@ export default function DiagnosisPage() {
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>vital_signs</span>
                     {currentQuestion.category}
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-headline font-extrabold text-on-surface leading-tight tracking-tight">
+                  <h1 className="text-2xl md:text-4xl font-headline font-extrabold text-on-surface leading-tight tracking-tight">
                     {currentQuestion.question}
                   </h1>
-                  <p className="text-on-surface-variant text-lg leading-relaxed">
+                  <p className="text-on-surface-variant text-base md:text-lg leading-relaxed">
                     Pilih jawaban yang paling sesuai dengan kondisi Anda saat ini.
                   </p>
                 </div>
@@ -670,15 +670,15 @@ export default function DiagnosisPage() {
                         : 'bg-surface-container-low border-transparent hover:border-primary/30 hover:bg-surface-container-highest'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 flex items-center justify-center rounded-xl shadow-sm transition-all duration-300 ${
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <div className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-xl shadow-sm transition-all duration-300 ${
                         selectedOption === 'ya' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-white text-primary group-hover:bg-primary group-hover:text-white'
                       }`}>
-                        <span className="material-symbols-outlined text-2xl" style={selectedOption === 'ya' ? { fontVariationSettings: "'FILL' 1" } : undefined}>check_circle</span>
+                        <span className="material-symbols-outlined text-xl md:text-2xl" style={selectedOption === 'ya' ? { fontVariationSettings: "'FILL' 1" } : undefined}>check_circle</span>
                       </div>
                       <div>
-                        <span className={`text-xl font-bold block ${selectedOption === 'ya' ? 'text-primary' : 'text-on-surface'}`}>Ya</span>
-                        <span className="text-sm text-on-surface-variant">Saya mengalami gejala ini</span>
+                        <span className={`text-lg md:text-xl font-bold block ${selectedOption === 'ya' ? 'text-primary' : 'text-on-surface'}`}>Ya</span>
+                        <span className="text-xs md:text-sm text-on-surface-variant">Saya mengalami gejala ini</span>
                       </div>
                     </div>
                   </button>

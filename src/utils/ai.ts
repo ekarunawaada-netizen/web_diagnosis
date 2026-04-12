@@ -57,16 +57,6 @@ Anda adalah VITARA Assistant. Analisis gejala berikut dan berikan output HANYA d
 }
 `;
 
-// Helper untuk memastikan model ada di fallback chain, jika tidak, taruh di index 0
-function getFallbackSequence(preferredModelKey: ModelType): ModelType[] {
-  const sequence = [preferredModelKey];
-  for (const model of FALLBACK_CHAIN) {
-    if (model !== preferredModelKey) {
-      sequence.push(model);
-    }
-  }
-  return sequence;
-}
 
 // === FUNGSI DIAGNOSIS (Menggunakan llama3 70b untuk kecerdasan maksimal) ===
 export async function getDiagnosis(symptoms: string[]) {
