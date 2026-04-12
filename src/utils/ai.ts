@@ -4,15 +4,9 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || "",
 });
 
-// === KONFIGURASI MODEL GROQ ===
-export const AVAILABLE_MODELS = {
-  LLAMA3_8B: "llama3-8b-8192",
-  LLAMA3_70B: "llama3-70b-8192",
-  MIXTRAL: "mixtral-8x7b-32768",
-  GEMMA: "gemma-7b-it"
-} as const;
-
-export type ModelType = keyof typeof AVAILABLE_MODELS;
+import { AVAILABLE_MODELS, ModelType } from "./ai-constants";
+export { AVAILABLE_MODELS };
+export type { ModelType };
 
 // Urutan fallback jika model utama terkena rate limit
 const FALLBACK_CHAIN: ModelType[] = ['LLAMA3_8B', 'MIXTRAL', 'GEMMA', 'LLAMA3_70B'];

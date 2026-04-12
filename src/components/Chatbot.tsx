@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { AVAILABLE_MODELS, ModelType } from '@/utils/ai';
+import { AVAILABLE_MODELS, ModelType } from '@/utils/ai-constants';
 
 interface Message {
   role: 'user' | 'model';
