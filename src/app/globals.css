@@ -89,3 +89,8 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #707883;
 }
+@layer utilities {
+  .animate-slow-pulse {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}

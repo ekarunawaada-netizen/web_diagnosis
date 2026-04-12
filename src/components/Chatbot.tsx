@@ -190,13 +190,27 @@ export default function Chatbot() {
               ))}
               {loading && (
                 <div className="flex justify-start animate-in fade-in duration-300 items-end">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mr-2 border border-primary/20">
-                    <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+                  {/* Avatar Vitara */}
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mr-2 border border-primary/20 mt-1">
+                    <span className="material-symbols-outlined text-[14px] text-primary animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      smart_toy
+                    </span>
                   </div>
-                  <div className="bg-white text-on-surface px-4 py-3 rounded-2xl rounded-tl-none border border-outline-variant/20 flex gap-1.5 items-center shadow-sm h-10">
-                    <div className="w-1.5 h-1.5 bg-primary/50 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-bounce delay-75"></div>
-                    <div className="w-1.5 h-1.5 bg-primary/90 rounded-full animate-bounce delay-150"></div>
+
+                  {/* Skeleton Bubble */}
+                  <div className="flex flex-col gap-1 w-[60%]">
+                    <div className="bg-white px-4 py-4 rounded-2xl rounded-tl-none border border-outline-variant/20 shadow-sm space-y-2">
+                      {/* Baris Skeleton */}
+                      <div className="h-2 bg-slate-100 rounded-full w-full animate-pulse"></div>
+                      <div className="h-2 bg-slate-100 rounded-full w-5/6 animate-pulse delay-75"></div>
+                      <div className="h-2 bg-slate-100 rounded-full w-4/6 animate-pulse delay-150"></div>
+                    </div>
+                    
+                    {/* Badge Status */}
+                    <div className="text-[9px] font-semibold text-slate-400 mt-0.5 ml-1 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
+                      Vitara sedang berpikir...
+                    </div>
                   </div>
                 </div>
               )}
