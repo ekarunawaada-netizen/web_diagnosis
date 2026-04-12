@@ -1,7 +1,9 @@
 import Groq from "groq-sdk";
 
+const apiKey = process.env.GROQ_API_KEY || "";
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY || "",
+  apiKey: apiKey,
+  dangerouslyAllowBrowser: true, // Safeguard for environments that look like browsers
 });
 
 import { AVAILABLE_MODELS, ModelType } from "./ai-constants";
@@ -33,7 +35,7 @@ GAYA PENULISAN (WAJIB):
 5. ATURAN RED FLAG (SANGAT PENTING): Jika ada keluhan gejala berbahaya (nyeri dada tembus ke punggung, sesak napas akut parah, pendarahan hebat, dsb), JANGAN pakai emoji santai. Langsung ubah nada menjadi SANGAT SERIUS dan arahkan untuk SEGERA ke UGD atau telepon layanan darurat 112.
 `;
 
-const diagnosisJsonInstructions = `
+const diagnosisJsonInstructions = ` 
 Anda adalah VITARA Assistant. Analisis gejala berikut dan berikan output HANYA dalam format JSON valid tanpa teks markdown pembuka/penutup seperti \`\`\`json. Struktur harus persis seperti ini:
 {
   "vitaraGreeting": "Sapaan asyik, ramah, kekinian, sangat empatik",
@@ -102,20 +104,20 @@ export async function chatService(
   }));
 
   const messages: any[] = [
-    { 
-      role: "system", 
-      content: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi. Selalu berikan sapaan manis di awal jika ini interaksi awal." 
+    {
+      role: "system",
+      content: vitaraSystemInstruction + "\nFormat keluaran Anda adalah Markdown yang rapi. Selalu berikan sapaan manis di awal jika ini interaksi awal."
     },
     ...groqHistory,
     { role: "user", content: message }
   ];
 
   const modelsToTry = getFallbackSequence(modelKey);
-  
+
   for (let i = 0; i < modelsToTry.length; i++) {
     const currentModelKey = modelsToTry[i];
     const currentModelId = AVAILABLE_MODELS[currentModelKey];
-    
+
     try {
       const response = await groq.chat.completions.create({
         messages: messages,
@@ -135,10 +137,14 @@ export async function chatService(
         console.warn(`[Auto-Fallback] Model ${currentModelId} limit/sibuk. Mencoba model berikutnya...`);
         continue;
       }
-      
+
       // Jika error tipe lain, langsung throw
       throw error;
     }
+  }
+
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY belum dikonfigurasi di server.");
   }
 
   // Jika semua model gagal

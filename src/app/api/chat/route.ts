@@ -20,8 +20,10 @@ export async function POST(req: NextRequest) {
       usedModel: result.usedModel,
       wasFallback: result.wasFallback
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat API Error:", error);
-    return NextResponse.json({ error: "Aduh, maaf banget ya kak.. sistem aku (Vitara) lagi ada kendala jaringan nih. Boleh tunggu sebentar dan coba tanyakan lagi ya! 🙏" }, { status: 500 });
+    return NextResponse.json({ 
+      error: `Error: ${error.message || "Kendala jaringan"}. Silakan coba beberapa saat lagi! 🙏` 
+    }, { status: 500 });
   }
 }
