@@ -37,9 +37,9 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
       <div className="flex justify-between items-center px-4 sm:px-6 py-4 max-w-[1440px] mx-auto">
-        <Link href="/" onClick={closeMenus} className="text-2xl font-bold bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent font-headline shrink-0 flex items-center gap-2">
+        <Link href="/" onClick={closeMenus} className="text-2xl font-bold font-headline shrink-0 flex items-center gap-2">
           <Image src="/logo.png" alt="Petit Hospital Logo" width={32} height={32} className="object-contain" />
-          Petit Hospital
+          <span className="bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent">Petit Hospital</span>
         </Link>
         
         {/* Desktop Menu */}

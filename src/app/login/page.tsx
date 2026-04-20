@@ -58,9 +58,9 @@ export default function LoginPage() {
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
         <div className="flex justify-between items-center px-6 py-4 max-w-[1440px] mx-auto">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent font-headline flex items-center gap-2">
+          <Link href="/" className="text-2xl font-bold font-headline flex items-center gap-2">
             <img src="/logo.png" alt="Petit Hospital Logo" className="h-8 w-8 object-contain" />
-            Petit Hospital
+            <span className="bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent">Petit Hospital</span>
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
             <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/">Beranda</Link>
