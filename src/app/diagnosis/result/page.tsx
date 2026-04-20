@@ -37,7 +37,7 @@ export default function ResultPage() {
       try {
         const parsedData = JSON.parse(lastDiagnosis);
         setData(parsedData);
-      } catch(e) {
+      } catch (e) {
         setError('Data diagnosis tidak valid.');
         setLoading(false);
       }
@@ -67,7 +67,7 @@ export default function ResultPage() {
         setLoading(true);
         const apiClient = (await import('@/lib/axios')).default;
 
-        const response = await apiClient.post('/api/diagnose', {
+        const response = await apiClient.post('/api/diagnose/start', {
           symptoms: symptomsPayload,
           options: { onlyActiveRules: true, minCF: 0 },
         });
@@ -119,7 +119,7 @@ export default function ResultPage() {
       name: r.diseaseName,
       probability: Math.round(r.cfValue * 100),
     }))
-  , [results]);
+    , [results]);
 
   useEffect(() => {
     if (data && results.length > 0) {
@@ -144,7 +144,7 @@ export default function ResultPage() {
   const handleDownloadPDF = async () => {
     const element = contentRef.current;
     if (!element) return;
-    
+
     try {
       setIsDownloading(true);
       const html2canvas = (await import('html2canvas')).default;
@@ -208,7 +208,7 @@ export default function ResultPage() {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`MediScan_Report_${new Date().getTime()}.pdf`);
     } catch (error) {
@@ -332,134 +332,134 @@ export default function ResultPage() {
 
           {/* Diagnosis Bento Grid */}
           {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Primary Condition */}
-            <div className="md:col-span-2 space-y-6">
-              <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-on-surface mb-2 font-headline">Diagnosis Utama</h2>
-                    <p className="text-slate-500">Kondisi yang paling mendekati profil gejala Anda.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Primary Condition */}
+              <div className="md:col-span-2 space-y-6">
+                <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-on-surface mb-2 font-headline">Diagnosis Utama</h2>
+                      <p className="text-slate-500">Kondisi yang paling mendekati profil gejala Anda.</p>
+                    </div>
+                    <div className="flex items-center gap-2 bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold">
+                      <span className="material-symbols-outlined text-sm">priority_high</span> Perlu Perhatian
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold">
-                    <span className="material-symbols-outlined text-sm">priority_high</span> Perlu Perhatian
+                  <div className="bg-surface-container-low p-6 rounded-2xl mb-6">
+                    <h3 className="text-xl font-bold text-primary mb-2 font-headline">{topMatch.name}</h3>
+                    <p className="text-on-surface-variant leading-relaxed"><span className="font-bold">Penyebab:</span> {topMatch.cause}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-2xl bg-secondary-container/20 border border-secondary-container/30">
+                      <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Gejala Dipilih</span>
+                      <span className="text-lg font-semibold">
+                        {data?.symptoms.length || 0} Gejala
+                      </span>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-tertiary-fixed/20 border border-tertiary-fixed/30">
+                      <span className="text-xs font-bold text-tertiary uppercase tracking-wider block mb-1">Tingkat Keparahan</span>
+                      <span className="text-sm font-semibold capitalize">
+                        {(results[0] as DiagnoseResult)?.severity || 'moderate'}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <div className="bg-surface-container-low p-6 rounded-2xl mb-6">
-                  <h3 className="text-xl font-bold text-primary mb-2 font-headline">{topMatch.name}</h3>
-                  <p className="text-on-surface-variant leading-relaxed"><span className="font-bold">Penyebab:</span> {topMatch.cause}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-secondary-container/20 border border-secondary-container/30">
-                    <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Gejala Dipilih</span>
-                    <span className="text-lg font-semibold">
-                      {data?.symptoms.length || 0} Gejala
-                    </span>
+
+                {/* Symptoms Summary */}
+                <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
+                  <h2 className="text-2xl font-bold text-on-surface mb-6 font-headline">Detail Gejala Anda</h2>
+                  <div className="flex flex-wrap gap-3">
+                    {data?.symptoms.map((s) => {
+                      const cfLabel = s.cfValue >= 0.9 ? 'Pasti' : s.cfValue >= 0.7 ? 'Kemungkinan Besar' : 'Mungkin';
+                      const dotColor = s.cfValue >= 0.9 ? 'bg-error' : s.cfValue >= 0.7 ? 'bg-tertiary' : 'bg-primary';
+                      return (
+                        <div key={s.symptomCode} className="px-4 py-3 bg-white border border-outline-variant/20 rounded-2xl shadow-sm flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`}></div>
+                          <div>
+                            <p className="font-bold text-sm text-on-surface">{s.name}</p>
+                            <p className="text-[10px] text-outline font-mono">{s.symptomCode} · {cfLabel}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="p-4 rounded-2xl bg-tertiary-fixed/20 border border-tertiary-fixed/30">
-                    <span className="text-xs font-bold text-tertiary uppercase tracking-wider block mb-1">Tingkat Keparahan</span>
-                    <span className="text-sm font-semibold capitalize">
-                      {(results[0] as DiagnoseResult)?.severity || 'moderate'}
-                    </span>
+                </div>
+
+                {/* Medical Advice */}
+                <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
+                  <h2 className="text-2xl font-bold text-on-surface mb-6 font-headline">Saran Penanganan</h2>
+                  <div className="space-y-4">
+                    <div className="flex gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 group">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined">medication</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold mb-1">Tindakan Mandiri</h4>
+                        <p className="text-sm text-on-surface-variant">{topMatch.treatment}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 p-4 rounded-2xl bg-tertiary/5 border border-tertiary/10 group">
+                      <div className="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+                        <span className="material-symbols-outlined">shield</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold mb-1">Langkah Pencegahan</h4>
+                        <p className="text-sm text-on-surface-variant">{topMatch.prevention}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Symptoms Summary */}
-              <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
-                <h2 className="text-2xl font-bold text-on-surface mb-6 font-headline">Detail Gejala Anda</h2>
-                <div className="flex flex-wrap gap-3">
-                  {data?.symptoms.map((s) => {
-                    const cfLabel = s.cfValue >= 0.9 ? 'Pasti' : s.cfValue >= 0.7 ? 'Kemungkinan Besar' : 'Mungkin';
-                    const dotColor = s.cfValue >= 0.9 ? 'bg-error' : s.cfValue >= 0.7 ? 'bg-tertiary' : 'bg-primary';
-                    return (
-                      <div key={s.symptomCode} className="px-4 py-3 bg-white border border-outline-variant/20 rounded-2xl shadow-sm flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`}></div>
-                        <div>
-                          <p className="font-bold text-sm text-on-surface">{s.name}</p>
-                          <p className="text-[10px] text-outline font-mono">{s.symptomCode} · {cfLabel}</p>
+              {/* Right Sidebar */}
+              <div className="space-y-6">
+                {/* Confidence Indicators */}
+                <div className="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10">
+                  <h3 className="font-bold mb-4 font-headline">Kemungkinan Lain</h3>
+                  <div className="space-y-4">
+                    {otherResults.map((item: { name: string; probability: number }) => (
+                      <div key={item.name}>
+                        <div className="flex justify-between text-xs font-bold mb-1">
+                          <span>{item.name}</span>
+                          <span>{item.probability}%</span>
+                        </div>
+                        <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+                          <div className="bg-primary h-full" style={{ width: `${item.probability}%` }}></div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Medical Advice */}
-              <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
-                <h2 className="text-2xl font-bold text-on-surface mb-6 font-headline">Saran Penanganan</h2>
-                <div className="space-y-4">
-                  <div className="flex gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 group">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined">medication</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold mb-1">Tindakan Mandiri</h4>
-                      <p className="text-sm text-on-surface-variant">{topMatch.treatment}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4 p-4 rounded-2xl bg-tertiary/5 border border-tertiary/10 group">
-                    <div className="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined">shield</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold mb-1">Langkah Pencegahan</h4>
-                      <p className="text-sm text-on-surface-variant">{topMatch.prevention}</p>
-                    </div>
+                    ))}
+                    {otherResults.length === 0 && (
+                      <p className="text-xs text-slate-400 italic">Tidak ada kemungkinan lain yang signifikan.</p>
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Right Sidebar */}
-            <div className="space-y-6">
-              {/* Confidence Indicators */}
-              <div className="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10">
-                <h3 className="font-bold mb-4 font-headline">Kemungkinan Lain</h3>
-                <div className="space-y-4">
-                  {otherResults.map((item: { name: string; probability: number }) => (
-                    <div key={item.name}>
-                      <div className="flex justify-between text-xs font-bold mb-1">
-                        <span>{item.name}</span>
-                        <span>{item.probability}%</span>
-                      </div>
-                      <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
-                        <div className="bg-primary h-full" style={{ width: `${item.probability}%` }}></div>
-                      </div>
+                {/* CTA Card */}
+                <div className="bg-white p-6 rounded-3xl shadow-xl shadow-blue-100 border border-blue-50">
+                  <div className="w-16 h-16 rounded-2xl bg-primary-container/20 flex items-center justify-center text-primary mb-4">
+                    <span className="material-symbols-outlined text-3xl">medical_services</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 font-headline">Konsultasi Dokter</h3>
+                  <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">Jangan menunggu gejala bertambah parah. Hubungkan dengan dokter spesialis kami sekarang.</p>
+                  <div className="space-y-3">
+                    <Link href="/clinic" className="w-full bg-primary text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20 active:scale-95">
+                      <span className="material-symbols-outlined">location_on</span> Cari Klinik Terdekat
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Map Preview */}
+                <div className="relative h-48 rounded-3xl overflow-hidden bg-slate-200 group">
+                  <img alt="Map showing medical centers" loading="lazy" className="w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBjazzDWWdEt0z6qBSKWT_GDLs8hRZDZP0XD80Nb4sON5CGv0Mx2iFxfTRDZAYNw6elSayUvlOzeCBjW7Hhf2e6VlW0cELU8BYR1qUg1ohvVdlMiHCp4s8mfjesJCxoG7-TAMuUC8OSeKuShWIkdwovl1IUWmc9hW7pT0qard1NuDCn_k9ZvDWiWieOhLEwjDcrxzhedSzmxeAoxijGVXeAcT6a9KywBg0nQdqKI2BhJHj7PaOtt4Cik6Ozqqq5dKYIcXir41GjVsh" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
+                    <div className="text-white">
+                      <p className="text-xs font-bold uppercase tracking-widest opacity-80">Terdekat</p>
+                      <p className="font-bold">RS Medika Pratama (1.2km)</p>
                     </div>
-                  ))}
-                  {otherResults.length === 0 && (
-                    <p className="text-xs text-slate-400 italic">Tidak ada kemungkinan lain yang signifikan.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* CTA Card */}
-              <div className="bg-white p-6 rounded-3xl shadow-xl shadow-blue-100 border border-blue-50">
-                <div className="w-16 h-16 rounded-2xl bg-primary-container/20 flex items-center justify-center text-primary mb-4">
-                  <span className="material-symbols-outlined text-3xl">medical_services</span>
-                </div>
-                <h3 className="text-xl font-bold mb-2 font-headline">Konsultasi Dokter</h3>
-                <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">Jangan menunggu gejala bertambah parah. Hubungkan dengan dokter spesialis kami sekarang.</p>
-                <div className="space-y-3">
-                  <Link href="/clinic" className="w-full bg-primary text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20 active:scale-95">
-                    <span className="material-symbols-outlined">location_on</span> Cari Klinik Terdekat
-                  </Link>
-                </div>
-              </div>
-
-              {/* Map Preview */}
-              <div className="relative h-48 rounded-3xl overflow-hidden bg-slate-200 group">
-                <img alt="Map showing medical centers" loading="lazy" className="w-full h-full object-cover grayscale opacity-80 group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBjazzDWWdEt0z6qBSKWT_GDLs8hRZDZP0XD80Nb4sON5CGv0Mx2iFxfTRDZAYNw6elSayUvlOzeCBjW7Hhf2e6VlW0cELU8BYR1qUg1ohvVdlMiHCp4s8mfjesJCxoG7-TAMuUC8OSeKuShWIkdwovl1IUWmc9hW7pT0qard1NuDCn_k9ZvDWiWieOhLEwjDcrxzhedSzmxeAoxijGVXeAcT6a9KywBg0nQdqKI2BhJHj7PaOtt4Cik6Ozqqq5dKYIcXir41GjVsh" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-4">
-                  <div className="text-white">
-                    <p className="text-xs font-bold uppercase tracking-widest opacity-80">Terdekat</p>
-                    <p className="font-bold">RS Medika Pratama (1.2km)</p>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
 
           {/* Urgent Banner */}
@@ -472,7 +472,7 @@ export default function ResultPage() {
               <p className="text-sm text-on-tertiary-container/80">Jika Anda mengalami kesulitan bernapas, nyeri dada yang hebat, atau demam di atas 40°C, segera kunjungi layanan darurat terdekat.</p>
             </div>
           </div>
-          
+
           <MedicalDisclaimer />
         </div>
       </main>

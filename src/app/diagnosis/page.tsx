@@ -112,7 +112,7 @@ export default function DiagnosisPage() {
       try {
         setLoadingSymptoms(true);
         const apiClient = (await import('@/lib/axios')).default;
-        const res = await apiClient.get('/api/symptoms');
+        const res = await apiClient.get('/api/diagnose/symptoms');
         // Response: { success: true, data: [...] }
         const data = res.data?.data ?? res.data;
         if (Array.isArray(data)) {
@@ -348,11 +348,10 @@ export default function DiagnosisPage() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                      activeCategory === cat
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border ${activeCategory === cat
                         ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
                         : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary/30 hover:text-primary'
-                    }`}
+                      }`}
                   >
                     {cat}
                   </button>
@@ -388,16 +387,14 @@ export default function DiagnosisPage() {
                       <button
                         key={symptom.code}
                         onClick={() => toggleSymptom(symptom)}
-                        className={`text-left p-4 rounded-2xl border transition-all duration-200 active:scale-[0.98] group ${
-                          isSelected
+                        className={`text-left p-4 rounded-2xl border transition-all duration-200 active:scale-[0.98] group ${isSelected
                             ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary/50'
                             : 'bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 hover:shadow-md'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                            isSelected ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary'
-                          }`}>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary'
+                            }`}>
                             {isSelected
                               ? <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                               : <span className="material-symbols-outlined text-xl">{getCategoryIcon(symptom.category)}</span>

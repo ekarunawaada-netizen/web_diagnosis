@@ -1,3 +1,5 @@
+
+
 /**
  * symptomMap.ts
  *
@@ -25,30 +27,30 @@ export const ANSWER_CF_MAP: Record<UserAnswerCF, number | null> = {
  */
 export const SYMPTOM_CODE_MAP: Record<string, string> = {
   // ── Vital Signs ──────────────────────────────────────────────────────────────
-  demam:            'G001', // Demam Tinggi
-  berkeringat_malam:'G005', // Berkeringat Malam
-  menggigil:        'G007', // Menggigil
+  demam: 'G001', // Demam Tinggi
+  berkeringat_malam: 'G005', // Berkeringat Malam
+  menggigil: 'G007', // Menggigil
 
   // ── Respiratory ──────────────────────────────────────────────────────────────
-  batuk:            'G002', // Batuk Kering
-  sesak_napas:      'G008', // Sesak Napas
+  batuk: 'G002', // Batuk Kering
+  sesak_napas: 'G008', // Sesak Napas
 
   // ── Neurological ─────────────────────────────────────────────────────────────
-  sakit_kepala:     'G006', // Sakit Kepala
+  sakit_kepala: 'G006', // Sakit Kepala
 
   // ── Gastrointestinal ─────────────────────────────────────────────────────────
-  mual:             'G009', // Mual
-  muntah:           'G010', // Muntah
-  diare:            'G011', // Diare
+  mual: 'G009', // Mual
+  muntah: 'G010', // Muntah
+  diare: 'G011', // Diare
 
   // ── Pain ─────────────────────────────────────────────────────────────────────
-  nyeri_dada:       'G004', // Nyeri Dada
-  nyeri_otot:       'G003', // Nyeri Sendi / Otot
+  nyeri_dada: 'G004', // Nyeri Dada
+  nyeri_otot: 'G003', // Nyeri Sendi / Otot
 
   // ── General ──────────────────────────────────────────────────────────────────
-  lemas:            'G012', // Lemas / Kelelahan
-  gatal:            'G013', // Gatal / Ruam Kulit
-  sakit_tenggorokan:'G014', // Sakit Tenggorokan
+  lemas: 'G012', // Lemas / Kelelahan
+  gatal: 'G013', // Gatal / Ruam Kulit
+  sakit_tenggorokan: 'G014', // Sakit Tenggorokan
 };
 
 /**
