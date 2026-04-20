@@ -148,13 +148,18 @@ export default function ResultPage() {
     try {
       setIsDownloading(true);
       const html2canvas = (await import('html2canvas')).default;
-      const jsPDF = (await import('jspdf')).default;
+      const jspdfModule = await import('jspdf');
+      const jsPDF = jspdfModule.jsPDF || jspdfModule.default;
 
       // Create a temporary container for the PDF content to ensure all fields are included
       const pdfContainer = document.createElement('div');
       pdfContainer.style.padding = '40px';
       pdfContainer.style.background = 'white';
       pdfContainer.style.width = '800px';
+      pdfContainer.style.position = 'absolute';
+      pdfContainer.style.left = '-9999px';
+      pdfContainer.style.top = '0px';
+      
       pdfContainer.innerHTML = `
         <div style="font-family: sans-serif; color: #1e293b;">
           <h1 style="color: #2563eb; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">Laporan Diagnosis Petit Hospital</h1>
@@ -163,7 +168,7 @@ export default function ResultPage() {
           <div style="margin-top: 30px;">
             <h2 style="font-size: 18px; color: #0f172a;">Ringkasan Gejala:</h2>
             <ul style="list-style: none; padding: 0;">
-              ${data?.symptoms.map(s => `
+              ${(data?.symptoms || []).map(s => `
                 <li style="background: #f8fafc; margin-bottom: 10px; padding: 15px; border-radius: 12px; border-left: 4px solid #3b82f6;">
                   <strong>${s.name}</strong>
                 </li>
@@ -191,7 +196,7 @@ export default function ResultPage() {
           </div>
 
           <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center;">
-            <p>Laporan ini dihasilkan secara otomatis oleh MediScan. Bukan merupakan pengganti saran medis profesional.</p>
+            <p>Laporan ini dihasilkan secara otomatis oleh Petit Hospital. Bukan merupakan pengganti saran medis profesional.</p>
           </div>
         </div>
       `;
@@ -210,7 +215,7 @@ export default function ResultPage() {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`MediScan_Report_${new Date().getTime()}.pdf`);
+      pdf.save(`PetitHospital_Report_${new Date().getTime()}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Gagal mengunduh PDF.');

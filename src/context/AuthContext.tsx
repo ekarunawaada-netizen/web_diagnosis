@@ -48,7 +48,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Fetch full user profile
       const meRes = await apiClient.get("/api/auth/me");
-      setUser(meRes.data.user ?? meRes.data);
+      const fetchedUser = meRes.data.user ?? meRes.data.data ?? meRes.data;
+      setUser(fetchedUser);
     } catch {
       // Cookie is absent or expired — user is not authenticated
       setAccessToken(null);
