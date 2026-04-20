@@ -11,10 +11,10 @@ export const getAccessToken = () => _accessToken;
 // baseURL is empty — all /api/* calls go to Next.js which proxies them to the
 // real backend via the rewrites in next.config.ts (no CORS issues).
 const apiClient = axios.create({
-  baseURL: 'https://hztapp.com/',
+  baseURL: '',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // Send cookies (refresh token) on same-origin proxied requests
-  timeout: 15000,
+  timeout: 60000,
 });
 
 // ─── Request Interceptor: attach Bearer token ─────────────────────────────────
