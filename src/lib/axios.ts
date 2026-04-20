@@ -1,31 +1,11 @@
 import axios from 'axios';
 
-// ─── Token Store ────────────────────────────────────────────
-// Disimpan di memory namun juga disinkronisasi ke localStorage dan cookie
-// agar ketika halaman direfresh, token yang masih aktif tidak hilang.
+// ─── In-memory access token store ────────────────────────────────────────────
+// Stored in memory (not localStorage) to reduce XSS attack surface.
 let _accessToken: string | null = null;
 
-export const setAccessToken = (token: string | null) => {
-  _accessToken = token;
-  if (typeof window !== 'undefined') {
-    if (token) {
-      localStorage.setItem('accessToken', token);
-      document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Lax`;
-    } else {
-      localStorage.removeItem('accessToken');
-      document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    }
-  }
-};
-
-export const getAccessToken = () => {
-  if (_accessToken) return _accessToken;
-  if (typeof window !== 'undefined') {
-    // Coba ambil dari localstorage jika memori sedang kosong (misal setelah refresh)
-    return localStorage.getItem('accessToken');
-  }
-  return null;
-};
+export const setAccessToken = (token: string | null) => { _accessToken = token; };
+export const getAccessToken = () => _accessToken;
 
 // ─── Axios Instance ───────────────────────────────────────────────────────────
 // baseURL is empty — all /api/* calls go to Next.js which proxies them to the
