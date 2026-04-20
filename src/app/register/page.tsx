@@ -3,18 +3,50 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import apiClient from "@/lib/axios";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !password) return; // Simple validation
-    // Simply redirect to login upon successful "dummy" registration
-    router.push("/login");
+    setError("");
+
+    if (!username || !email || !phone || !password) {
+      setError("Semua field harus diisi.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password minimal 8 karakter.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await apiClient.post("/api/auth/register", {
+        username,
+        email,
+        phone,
+        password,
+      });
+      // Registration successful — redirect to login
+      router.push("/login?registered=1");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Pendaftaran gagal. Silakan coba lagi.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -25,7 +57,10 @@ export default function RegisterPage() {
           {/* Left Side: Visual/Editorial Branding */}
           <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-[#0061a4] to-[#2196f3] relative overflow-hidden">
             <div className="relative z-10">
-              <h1 className="font-headline text-4xl font-extrabold tracking-tighter text-on-primary mb-4">MediScan</h1>
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/logo.png" alt="Petit Hospital Logo" className="h-10 w-10 object-contain invert brightness-0" style={{ filter: "brightness(0) invert(1)" }} />
+                <h1 className="font-headline text-4xl font-extrabold tracking-tighter text-on-primary">Petit Hospital</h1>
+              </div>
               <p className="text-on-primary/90 text-lg max-w-sm leading-relaxed">Precision diagnostics for a healthier tomorrow. Create your sanctuary for medical history and real-time monitoring.</p>
             </div>
 
@@ -50,40 +85,46 @@ export default function RegisterPage() {
                     <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK9IsYTRfk2z_GDbULxeEXZBTNW_6o5_y6cbgxoG7ADoF0eo7FOUp90MSlw52xfax-r9YrixCQ-V-WNL9qcbBE15zz_9-gbcBin0eJjNv2xL3ysFFXQHAm1rQ-Innw74cscmG1vvzLS7N9bYMveX5VBGufYI6V05MF0VO2WInEAmwGP8Ktho2xWCXc2Hk7zYTrm-LsXTMqgREbFQkuAMw446HYZzsKIcGd3FyDI_cv3kHe1X4WTkzToTDmfz3a06s2Iyp-n1OeH6Pi" alt="female medical professional" className="w-full h-full object-cover" />
                   </div>
                 </div>
-                <p className="text-on-primary text-sm font-medium">Join 50k+ patients & clinicians</p>
+                <p className="text-on-primary text-sm font-medium">Join 50k+ patients &amp; clinicians</p>
               </div>
             </div>
 
             {/* Abstract Decorative Elements */}
             <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20 pointer-events-none">
-              <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCe9LAxIV6ntx8JnulfW47L9Hmgyj45AIe_Dqwh4v-oqyJUBN7LJeGCeaqRtW80w3QvHRhxxvadOUoxO3MHnRYFELYobRbLq8gy4PMJuPZZblylqOoL0COMSd8eYD1m81GGYJamqOeIfvQxNwX_n1aXjqTTaiXhOqWRW2JNxM0eeIBnwdC5Dz8saAsFI6GYIU5JWAm9t_eFf6XVAOeVs3fNYfAo6ocJiV8v4CmJmt2Ms18bw-0MF5Q0bND1HRixUXWZkR7oacYnho1D" alt="abstract blue digital medical data visualization" className="w-full h-full object-cover mix-blend-overlay" />
-            </div>
           </div>
 
           {/* Right Side: Registration Form */}
           <div className="p-8 md:p-12 flex flex-col justify-center bg-surface-container-lowest">
-            <div className="mb-10 text-center lg:text-left">
+            <div className="mb-8 text-center lg:text-left">
               <h2 className="font-headline text-3xl font-bold text-on-surface mb-2">Buat Akun Baru</h2>
               <p className="text-on-surface-variant">Mulai perjalanan kesehatan Anda hari ini.</p>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-semibold border border-red-100 mb-6 animate-in fade-in zoom-in-95">
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              {/* Username */}
               <div className="space-y-2">
-                <label className="font-label text-xs font-bold tracking-widest text-on-surface-variant uppercase">Nama Lengkap</label>
+                <label className="font-label text-xs font-bold tracking-widest text-on-surface-variant uppercase">Username</label>
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">person</span>
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">badge</span>
                   <input
                     type="text"
                     required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     className="w-full pl-12 pr-4 py-4 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-on-surface placeholder:text-on-surface-variant/50"
-                    placeholder="Masukkan nama lengkap Anda"
+                    placeholder="Pilih username unik Anda"
+                    autoComplete="username"
                   />
                 </div>
               </div>
 
+              {/* Email */}
               <div className="space-y-2">
                 <label className="font-label text-xs font-bold tracking-widest text-on-surface-variant uppercase">Email</label>
                 <div className="relative group">
@@ -95,40 +136,65 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-4 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-on-surface placeholder:text-on-surface-variant/50"
                     placeholder="contoh@email.com"
+                    autoComplete="email"
                   />
                 </div>
               </div>
 
+              {/* Phone */}
+              <div className="space-y-2">
+                <label className="font-label text-xs font-bold tracking-widest text-on-surface-variant uppercase">Nomor Telepon</label>
+                <div className="relative group">
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">phone</span>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full pl-12 pr-4 py-4 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-on-surface placeholder:text-on-surface-variant/50"
+                    placeholder="08xxxxxxxxxx"
+                    autoComplete="tel"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
               <div className="space-y-2">
                 <label className="font-label text-xs font-bold tracking-widest text-on-surface-variant uppercase">Kata Sandi</label>
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant transition-colors group-focus-within:text-primary">lock</span>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-12 pr-12 py-4 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-on-surface placeholder:text-on-surface-variant/50"
                     placeholder="Min. 8 karakter"
+                    autoComplete="new-password"
                   />
-                  <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary">
-                    <span className="material-symbols-outlined">visibility</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors"
+                  >
+                    <span className="material-symbols-outlined">{showPassword ? "visibility_off" : "visibility"}</span>
                   </button>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-4 bg-gradient-to-br from-[#0061a4] to-[#2196f3] text-on-primary font-headline font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all active:scale-95"
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-br from-[#0061a4] to-[#2196f3] text-on-primary font-headline font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all active:scale-95 disabled:opacity-75 disabled:cursor-wait"
               >
-                Daftar Sekarang
+                {loading ? "Mendaftarkan..." : "Daftar Sekarang"}
               </button>
             </form>
 
-
-            <div className="mt-10 text-center">
+            <div className="mt-8 text-center">
               <p className="text-on-surface-variant text-sm">
-                Sudah punya akun? <Link href="/login" className="text-primary font-bold hover:underline">Masuk</Link>
+                Sudah punya akun?{" "}
+                <Link href="/login" className="text-primary font-bold hover:underline">Masuk</Link>
               </p>
             </div>
           </div>
@@ -139,8 +205,8 @@ export default function RegisterPage() {
       <footer className="w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto">
           <div className="mb-6 md:mb-0 text-center md:text-left">
-            <span className="font-manrope font-bold text-slate-900 dark:text-slate-100 text-lg block mb-2">MediScan</span>
-            <p className="font-inter text-xs text-slate-500 dark:text-slate-400 max-w-xs">© 2024 MediScan Diagnostics. All rights reserved.</p>
+            <span className="font-manrope font-bold text-slate-900 dark:text-slate-100 text-lg block mb-2">Petit Hospital</span>
+            <p className="font-inter text-xs text-slate-500 dark:text-slate-400 max-w-xs">© 2024 Petit Hospital Diagnostics. All rights reserved.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">
             <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Privacy Policy</Link>

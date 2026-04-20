@@ -1,57 +1,109 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
+import apiClient, { setAccessToken, getAccessToken } from "@/lib/axios";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type User = {
-  name: string;
-  email: string;
+  id: number;
+  username: string;
+  permId: number;
 };
 
 type AuthContextType = {
   user: User | null;
-  login: (email: string, name?: string) => void;
-  logout: () => void;
+  isLoading: boolean;
+  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
+  logout: () => Promise<void>;
 };
+
+// ─── Context ──────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ─── Provider ─────────────────────────────────────────────────────────────────
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const didInitRef = useRef(false);
 
-  useEffect(() => {
-    // Check local storage for dummy persistence
-    const storedUser = localStorage.getItem("mediscan_dummy_user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse dummy user data", e);
-      }
+  /**
+   * Try to silently restore session on mount using the httpOnly refresh-token
+   * cookie (set by the backend on login). If the cookie is valid a new
+   * access-token is returned and we fetch the current user profile.
+   */
+  const tryRestoreSession = useCallback(async () => {
+    try {
+      const { data } = await apiClient.post("/api/auth/refresh");
+      setAccessToken(data.accessToken);
+
+      // Fetch full user profile
+      const meRes = await apiClient.get("/api/auth/me");
+      setUser(meRes.data.user ?? meRes.data);
+    } catch {
+      // Cookie is absent or expired — user is not authenticated
+      setAccessToken(null);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const login = (email: string, customName?: string) => {
-    // Dummy login logic: always succeed, extract username from email
-    const nameStr = email.split("@")[0] || "User";
-    const defaultName = nameStr.charAt(0).toUpperCase() + nameStr.slice(1);
-    const name = customName || defaultName;
-    
-    const loggedInUser = { email, name };
-    setUser(loggedInUser);
-    localStorage.setItem("mediscan_dummy_user", JSON.stringify(loggedInUser));
-  };
+  useEffect(() => {
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+    tryRestoreSession();
+  }, [tryRestoreSession]);
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("mediscan_dummy_user");
-  };
+  // ─── login ──────────────────────────────────────────────────────────────────
+
+  const login = useCallback(
+    async (username: string, password: string, rememberMe = false) => {
+      const { data } = await apiClient.post("/api/auth/login", {
+        username,
+        password,
+        rememberMe,
+      });
+
+      // Backend returns { accessToken, user: { id, username, permId } }
+      setAccessToken(data.accessToken);
+      setUser(data.user);
+    },
+    []
+  );
+
+  // ─── logout ─────────────────────────────────────────────────────────────────
+
+  const logout = useCallback(async () => {
+    try {
+      await apiClient.post("/api/auth/logout");
+    } catch {
+      // Always clear client-side state even if the server call fails
+    } finally {
+      setAccessToken(null);
+      setUser(null);
+    }
+  }, []);
+
+  // ─── Context value ───────────────────────────────────────────────────────────
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

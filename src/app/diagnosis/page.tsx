@@ -1,605 +1,273 @@
 'use client';
 
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
-import diseasesData from '@/data/diseases.json';
+import { useRouter } from 'next/navigation';
 
-/* ─── TYPES ─── */
-interface SymptomAnswer {
-  id: string;
+/* ─── TYPES ──────────────────────────────────────────────────────────────── */
+interface ApiSymptom {
+  id: number;
+  code: string;
   name: string;
-  answer: 'ya' | 'tidak' | 'tidak_yakin';
-  intensity: number;
-  duration: number;
+  description: string;
+  weight: string;
+  category: string;
 }
 
-/* ─── QUESTION TREE ─── */
-const questionTree = [
-  // === ROOT QUESTIONS ===
-  { id: 'demam', name: 'Demam', icon: 'thermostat', category: 'Gejala Vital', bodyArea: 'head',
-    question: 'Apakah Anda merasa demam atau suhu tubuh meningkat?',
-    tip: 'Gunakan termometer jika tersedia. Suhu di atas 37.5°C umumnya dianggap demam.',
-    branches: { ya: ['berkeringat_malam', 'menggigil'], tidak: [] },
-    isCritical: false },
+interface SelectedSymptom extends ApiSymptom {
+  cfValue: number; // 0.9 = pasti, 0.75 = kemungkinan besar, 0.5 = mungkin
+}
 
-  { id: 'berkeringat_malam', name: 'Berkeringat di Malam Hari', icon: 'nightlight', category: 'Gejala Infeksi',
-    question: 'Apakah Anda sering berkeringat berlebihan di malam hari?',
-    tip: 'Berkeringat malam yang tidak terkait suhu ruangan bisa menandakan infeksi sistemik.',
-    branches: { ya: [], tidak: [] }, parentCondition: { id: 'demam', answer: 'ya' },
-    isCritical: false },
-
-  { id: 'menggigil', name: 'Menggigil', icon: 'ac_unit', category: 'Gejala Infeksi',
-    question: 'Apakah Anda mengalami menggigil?',
-    tip: 'Menggigil bersama demam bisa menunjukkan infeksi bakteri atau virus.',
-    branches: { ya: [], tidak: [] }, parentCondition: { id: 'demam', answer: 'ya' },
-    isCritical: false },
-
-  { id: 'batuk', name: 'Batuk', icon: 'air', category: 'Sistem Pernapasan', bodyArea: 'chest',
-    question: 'Apakah Anda mengalami batuk?',
-    tip: 'Perhatikan jenis batuknya — kering atau berdahak, dan sudah berapa lama.',
-    branches: { ya: ['sesak_napas'], tidak: [] },
-    isCritical: false },
-
-  { id: 'sesak_napas', name: 'Sesak Napas', icon: 'lungs', category: 'Sistem Pernapasan',
-    question: 'Apakah Anda mengalami sesak napas atau kesulitan bernapas?',
-    tip: '⚠️ Sesak napas parah memerlukan penanganan darurat.',
-    branches: { ya: [], tidak: [] }, parentCondition: { id: 'batuk', answer: 'ya' },
-    isCritical: true, criticalMessage: 'Sesak napas parah bisa mengindikasikan kondisi serius pada paru-paru atau jantung.' },
-
-  { id: 'sakit_kepala', name: 'Sakit Kepala', icon: 'psychology', category: 'Nyeri', bodyArea: 'head',
-    question: 'Apakah Anda mengalami sakit kepala?',
-    tip: 'Perhatikan lokasi nyeri — depan, belakang, atau menyebar.',
-    branches: { ya: [], tidak: [] },
-    isCritical: false },
-
-  { id: 'mual', name: 'Mual', icon: 'sick', category: 'Sistem Pencernaan', bodyArea: 'stomach',
-    question: 'Apakah Anda merasa mual atau ingin muntah?',
-    tip: 'Mual bisa berkaitan dengan masalah pencernaan, efek obat, atau gejala penyakit lain.',
-    branches: { ya: ['muntah'], tidak: [] },
-    isCritical: false },
-
-  { id: 'muntah', name: 'Muntah', icon: 'sick', category: 'Sistem Pencernaan',
-    question: 'Apakah Anda sudah muntah?',
-    tip: 'Catat frekuensi muntah dan apakah disertai darah.',
-    branches: { ya: [], tidak: [] }, parentCondition: { id: 'mual', answer: 'ya' },
-    isCritical: false },
-
-  { id: 'nyeri_dada', name: 'Nyeri Dada', icon: 'heart_broken', category: 'Gejala Kritis', bodyArea: 'chest',
-    question: 'Apakah Anda mengalami nyeri di bagian dada?',
-    tip: '⚠️ Nyeri dada hebat memerlukan perhatian medis segera.',
-    branches: { ya: [], tidak: [] },
-    isCritical: true, criticalMessage: 'Nyeri dada hebat bisa mengindikasikan serangan jantung atau kondisi paru-paru serius.' },
-
-  { id: 'nyeri_otot', name: 'Nyeri Otot & Sendi', icon: 'fitness_center', category: 'Nyeri', bodyArea: 'body',
-    question: 'Apakah Anda merasakan nyeri pada otot atau sendi?',
-    tip: 'Nyeri otot bisa disebabkan aktivitas fisik atau gejala infeksi virus.',
-    branches: { ya: [], tidak: [] },
-    isCritical: false },
-
-  { id: 'diare', name: 'Diare', icon: 'water_drop', category: 'Sistem Pencernaan', bodyArea: 'stomach',
-    question: 'Apakah Anda mengalami diare (BAB encer berulang)?',
-    tip: 'Hitung frekuensi BAB dalam 24 jam terakhir. Jaga hidrasi tubuh.',
-    branches: { ya: [], tidak: [] },
-    isCritical: false },
-
-  { id: 'lemas', name: 'Lemas / Kelelahan', icon: 'battery_low', category: 'Gejala Umum', bodyArea: 'body',
-    question: 'Apakah Anda merasa lemas atau sangat kelelahan?',
-    tip: 'Lemas terus-menerus bisa menandakan infeksi, anemia, atau dehidrasi.',
-    branches: { ya: [], tidak: [] },
-    isCritical: false },
-
-  { id: 'gatal', name: 'Gatal / Ruam Kulit', icon: 'dermatology', category: 'Kulit', bodyArea: 'body',
-    question: 'Apakah Anda mengalami gatal-gatal atau ruam pada kulit?',
-    tip: 'Perhatikan apakah gatal disertai ruam, bentol, atau perubahan warna kulit.',
-    branches: { ya: [], tidak: [] },
-    isCritical: false },
-
-  { id: 'sakit_tenggorokan', name: 'Sakit Tenggorokan', icon: 'voice_over_off', category: 'Sistem Pernapasan', bodyArea: 'head',
-    question: 'Apakah tenggorokan Anda terasa sakit atau nyeri saat menelan?',
-    tip: 'Perhatikan apakah disertai kesulitan menelan, suara serak, atau pembengkakan.',
-    branches: { ya: [], tidak: [] },
-    isCritical: false },
+/* ─── CF LEVEL OPTIONS ───────────────────────────────────────────────────── */
+/* ─── CF CONFIDENCE LEVELS (matches backend USER_CONFIDENCE_LEVELS) ────── */
+const CF_LEVELS = [
+  {
+    key: 'definitely_not',
+    label: 'Tidak Sama Sekali',
+    shortLabel: 'Tidak',
+    value: 0,
+    icon: 'do_not_disturb_on',
+    color: 'text-slate-500',
+    bg: 'bg-slate-100 border-slate-300',
+  },
+  {
+    key: 'maybe_not',
+    label: 'Mungkin Tidak',
+    shortLabel: 'Mungkin Tidak',
+    value: 0.25,
+    icon: 'thumb_down',
+    color: 'text-blue-500',
+    bg: 'bg-blue-50 border-blue-200',
+  },
+  {
+    key: 'unknown',
+    label: 'Tidak Tahu',
+    shortLabel: 'Tidak Tahu',
+    value: 0.5,
+    icon: 'help',
+    color: 'text-yellow-600',
+    bg: 'bg-yellow-50 border-yellow-200',
+  },
+  {
+    key: 'maybe_yes',
+    label: 'Mungkin Ya',
+    shortLabel: 'Mungkin Ya',
+    value: 0.75,
+    icon: 'thumb_up',
+    color: 'text-orange-500',
+    bg: 'bg-orange-50 border-orange-200',
+  },
+  {
+    key: 'definitely_yes',
+    label: 'Pasti',
+    shortLabel: 'Pasti',
+    value: 1.0,
+    icon: 'check_circle',
+    color: 'text-red-500',
+    bg: 'bg-red-50 border-red-200',
+  },
 ];
 
-// Root-level questions (no parent condition)
-const rootQuestions = questionTree.filter(q => !q.parentCondition);
 
-/* ─── BODY AREA MAP ─── */
-const bodyAreas = [
-  { id: 'head', label: 'Kepala', icon: 'face', y: '10%' },
-  { id: 'chest', label: 'Dada', icon: 'monitor_heart', y: '35%' },
-  { id: 'stomach', label: 'Perut', icon: 'gastroenterology', y: '55%' },
-];
+/* ─── CATEGORY ICONS ────────────────────────────────────────────────────── */
+const CATEGORY_ICON: Record<string, string> = {
+  'Sistem Pernapasan': 'air',
+  'Sistem Pencernaan': 'gastroenterology',
+  'Psikiatri': 'psychology',
+  'Nyeri': 'sentiment_very_dissatisfied',
+  'Gejala Umum': 'monitor_heart',
+  'Sistem Saraf': 'neurology',
+  'Kulit': 'dermatology',
+  'Kardiovaskular': 'cardiology',
+  'Default': 'medical_information',
+};
 
-/* ─── PHASES ─── */
-type Phase = 'welcome' | 'quiz' | 'emergency' | 'result';
+const getCategoryIcon = (category: string) =>
+  CATEGORY_ICON[category] || CATEGORY_ICON['Default'];
 
+/* ─── COMPONENT ─────────────────────────────────────────────────────────── */
 export default function DiagnosisPage() {
-  const [phase, setPhase] = useState<Phase>('welcome');
-  const [answers, setAnswers] = useState<SymptomAnswer[]>([]);
-  const [questionQueue, setQuestionQueue] = useState<string[]>([]);
-  const [currentQIdx, setCurrentQIdx] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [emergencyMsg, setEmergencyMsg] = useState('');
-  const [search, setSearch] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // All unique symptom names from diseases data for autocomplete
-  const allSymptomNames = useMemo(() => {
-    const set = new Set<string>();
-    diseasesData.forEach((d: any) => d.symptoms.forEach((s: string) => {
-      const n = s.toLowerCase().replace(/^dan\s+/, '').replace(/^hingga\s+/, '').trim();
-      if (n.length > 3 && !n.includes('bergantung')) set.add(n);
-    }));
-    return Array.from(set).sort().map(s => s.charAt(0).toUpperCase() + s.slice(1));
-  }, []);
+  // ── Data State ──────────────────────────────────────────────────────────
+  const [allSymptoms, setAllSymptoms] = useState<ApiSymptom[]>([]);
+  const [loadingSymptoms, setLoadingSymptoms] = useState(true);
+  const [fetchError, setFetchError] = useState('');
 
-  const filteredSuggestions = useMemo(() =>
-    search.length > 1 ? allSymptomNames.filter(s => s.toLowerCase().includes(search.toLowerCase())).slice(0, 8) : []
-  , [search, allSymptomNames]);
+  // ── UI State ────────────────────────────────────────────────────────────
+  const [phase, setPhase] = useState<'welcome' | 'select' | 'review'>('welcome');
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState('Semua');
+  const [selectedSymptoms, setSelectedSymptoms] = useState<SelectedSymptom[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Build question queue
-  const startQuiz = useCallback((initialQueue?: string[]) => {
-    const queue = initialQueue || rootQuestions.map(q => q.id);
-    setQuestionQueue(queue);
-    setCurrentQIdx(0);
-    setAnswers([]);
-    setSelectedOption(null);
-    setPhase('quiz');
-  }, []);
+  // ── Fetch symptoms from API ──────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'select' && phase !== 'welcome') return;
+    const fetchSymptoms = async () => {
+      try {
+        setLoadingSymptoms(true);
+        const apiClient = (await import('@/lib/axios')).default;
+        const res = await apiClient.get('/api/symptoms');
+        // Response: { success: true, data: [...] }
+        const data = res.data?.data ?? res.data;
+        if (Array.isArray(data)) {
+          setAllSymptoms(data);
+        } else {
+          setFetchError('Format data gejala tidak valid dari server.');
+        }
+      } catch (err: any) {
+        setFetchError(
+          err.response?.status === 401
+            ? 'Silakan login untuk mengakses fitur diagnosis.'
+            : 'Gagal memuat daftar gejala. Periksa koneksi Anda.'
+        );
+      } finally {
+        setLoadingSymptoms(false);
+      }
+    };
+    fetchSymptoms();
+  }, [phase]);
 
-  const startFromBodyArea = useCallback((areaId: string) => {
-    // prioritize questions relating to this body area
-    const areaQuestions = rootQuestions.filter(q => q.bodyArea === areaId).map(q => q.id);
-    const otherQuestions = rootQuestions.filter(q => q.bodyArea !== areaId).map(q => q.id);
-    startQuiz([...areaQuestions, ...otherQuestions]);
-  }, [startQuiz]);
+  // ── Derived data ────────────────────────────────────────────────────────
+  const categories = useMemo(() => {
+    const cats = new Set(allSymptoms.map(s => s.category));
+    return ['Semua', ...Array.from(cats).sort()];
+  }, [allSymptoms]);
 
-  const startFromSearch = useCallback((symptomName: string) => {
-    // Find matching question, put it first
-    const matchQ = rootQuestions.find(q => q.name.toLowerCase().includes(symptomName.toLowerCase()));
-    if (matchQ) {
-      const others = rootQuestions.filter(q => q.id !== matchQ.id).map(q => q.id);
-      startQuiz([matchQ.id, ...others]);
-    } else {
-      startQuiz();
+  const filteredSymptoms = useMemo(() => {
+    let list = allSymptoms;
+    if (activeCategory !== 'Semua') {
+      list = list.filter(s => s.category === activeCategory);
     }
-    setSearch('');
-    setShowSuggestions(false);
-  }, [startQuiz]);
+    if (search.trim().length > 0) {
+      const q = search.toLowerCase();
+      list = list.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.category.toLowerCase().includes(q) ||
+        s.code.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allSymptoms, activeCategory, search]);
 
-  const currentQuestion = useMemo(() => {
-    if (currentQIdx >= questionQueue.length) return null;
-    return questionTree.find(q => q.id === questionQueue[currentQIdx]) || null;
-  }, [currentQIdx, questionQueue]);
+  const selectedCodes = useMemo(() => new Set(selectedSymptoms.map(s => s.code)), [selectedSymptoms]);
 
-  const progress = questionQueue.length > 0 ? ((currentQIdx + 1) / questionQueue.length) * 100 : 0;
+  // ── Actions ──────────────────────────────────────────────────────────────
+  const toggleSymptom = useCallback((symptom: ApiSymptom) => {
+    setSelectedSymptoms(prev => {
+      if (prev.some(s => s.code === symptom.code)) {
+        return prev.filter(s => s.code !== symptom.code);
+      }
+      // Default: definitely_yes = 1.0
+      return [...prev, { ...symptom, cfValue: 1.0 }];
+    });
+  }, []);
 
-  const handleAnswer = useCallback((answer: 'ya' | 'tidak' | 'tidak_yakin') => {
-    if (!currentQuestion) return;
-    setSelectedOption(answer);
+  const updateCF = useCallback((code: string, cfValue: number) => {
+    setSelectedSymptoms(prev =>
+      prev.map(s => s.code === code ? { ...s, cfValue } : s)
+    );
+  }, []);
 
-    setTimeout(() => {
-      setIsTransitioning(true);
+  const removeSymptom = useCallback((code: string) => {
+    setSelectedSymptoms(prev => prev.filter(s => s.code !== code));
+  }, []);
 
-      const newAnswer: SymptomAnswer = {
-        id: currentQuestion.id,
-        name: currentQuestion.name,
-        answer,
-        intensity: answer === 'ya' ? 3 : answer === 'tidak_yakin' ? 2 : 0,
-        duration: 3,
+  const handleSubmit = useCallback(async () => {
+    if (selectedSymptoms.length === 0) return;
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        // Exclude symptoms with CF=0 (definitely_not) — they add no information
+        symptoms: selectedSymptoms
+          .filter(s => s.cfValue > 0)
+          .map(s => ({
+            symptomCode: s.code,
+            cfValue: s.cfValue,
+            name: s.name,
+          })),
+        timestamp: new Date().toISOString(),
       };
-
-      const updatedAnswers = [...answers, newAnswer];
-      setAnswers(updatedAnswers);
-
-      // RED FLAG check
-      if (answer === 'ya' && currentQuestion.isCritical) {
-        setEmergencyMsg(currentQuestion.criticalMessage || 'Gejala kritis terdeteksi!');
-        setTimeout(() => {
-          setPhase('emergency');
-          setIsTransitioning(false);
-        }, 300);
+      if (payload.symptoms.length === 0) {
+        setIsSubmitting(false);
         return;
       }
-
-      // Branch logic: if "Ya", inject follow-up questions
-      let newQueue = [...questionQueue];
-      if (answer === 'ya' && currentQuestion.branches?.ya?.length) {
-        const insertIdx = currentQIdx + 1;
-        const branchIds = currentQuestion.branches.ya.filter(
-          (bId: string) => !newQueue.includes(bId) // prevent duplicates
-        );
-        newQueue.splice(insertIdx, 0, ...branchIds);
-        setQuestionQueue(newQueue);
-      }
-
-      setTimeout(() => {
-        const nextIdx = currentQIdx + 1;
-        if (nextIdx >= newQueue.length) {
-          // Quiz finished → show results
-          // Save to localStorage for result page
-          const selectedSymptoms = updatedAnswers
-            .filter(a => a.answer === 'ya' || a.answer === 'tidak_yakin')
-            .map(a => ({ id: a.id, name: a.name, intensity: a.intensity, duration: a.duration }));
-
-          localStorage.setItem('mediscan_last_diagnosis', JSON.stringify({
-            symptoms: selectedSymptoms,
-            timestamp: new Date().toISOString()
-          }));
-          setPhase('result');
-        } else {
-          setCurrentQIdx(nextIdx);
-          setSelectedOption(null);
-        }
-        setIsTransitioning(false);
-      }, 300);
-    }, 200);
-  }, [currentQuestion, answers, questionQueue, currentQIdx]);
-
-  const goBack = useCallback(() => {
-    if (currentQIdx > 0) {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentQIdx(prev => prev - 1);
-        setSelectedOption(null);
-        setAnswers(prev => prev.slice(0, -1));
-        setIsTransitioning(false);
-      }, 300);
-    } else {
-      setPhase('welcome');
+      localStorage.setItem('mediscan_last_diagnosis', JSON.stringify(payload));
+      localStorage.removeItem('mediscan_ongoing_diagnosis');
+      router.push('/diagnosis/result');
+    } catch {
+      setIsSubmitting(false);
     }
-  }, [currentQIdx]);
+  }, [selectedSymptoms, router]);
 
-  // Matched diseases for result
-  const diagnosisResults = useMemo(() => {
-    const userSymptoms = answers.filter(a => a.answer === 'ya' || a.answer === 'tidak_yakin').map(a => a.name.toLowerCase());
-    if (userSymptoms.length === 0) return [];
-
-    return diseasesData.map((disease: any) => {
-      let matched = 0;
-      disease.symptoms.forEach((s: string) => {
-        if (userSymptoms.some(us => s.toLowerCase().includes(us) || us.includes(s.toLowerCase()))) matched++;
-      });
-      const probability = Math.min(Math.round((matched / Math.max(userSymptoms.length, disease.symptoms.length)) * 100), 95);
-      return { ...disease, probability, matched };
-    })
-    .filter(d => d.matched > 0)
-    .sort((a, b) => b.probability - a.probability || b.matched - a.matched)
-    .slice(0, 3);
-  }, [answers]);
-
-  /* ═══════════════════════════════════════════════════════════════
-   *  RENDER: WELCOME / SMART SEARCH SCREEN
-   * ═══════════════════════════════════════════════════════════════ */
+  /* ═════════════════════════════════════════════════════════════════════════
+   *  PHASE: WELCOME
+   * ═════════════════════════════════════════════════════════════════════════ */
   if (phase === 'welcome') {
-    const symptomCategories = [
-      { icon: 'thermostat', label: 'Demam & Infeksi', desc: 'Suhu tinggi, menggigil', color: 'from-red-500/10 to-orange-500/5', iconColor: 'text-red-500', border: 'border-red-200/40' },
-      { icon: 'lungs', label: 'Pernapasan', desc: 'Batuk, sesak napas', color: 'from-blue-500/10 to-cyan-500/5', iconColor: 'text-blue-500', border: 'border-blue-200/40' },
-      { icon: 'gastroenterology', label: 'Pencernaan', desc: 'Mual, diare, muntah', color: 'from-green-500/10 to-emerald-500/5', iconColor: 'text-green-600', border: 'border-green-200/40' },
-      { icon: 'psychology', label: 'Kepala & Saraf', desc: 'Sakit kepala, pusing', color: 'from-purple-500/10 to-violet-500/5', iconColor: 'text-purple-500', border: 'border-purple-200/40' },
-      { icon: 'fitness_center', label: 'Otot & Sendi', desc: 'Nyeri, kaku, bengkak', color: 'from-amber-500/10 to-yellow-500/5', iconColor: 'text-amber-600', border: 'border-amber-200/40' },
-      { icon: 'dermatology', label: 'Kulit & Alergi', desc: 'Gatal, ruam, bentol', color: 'from-pink-500/10 to-rose-500/5', iconColor: 'text-pink-500', border: 'border-pink-200/40' },
+    const highlights = [
+      { icon: 'search', title: 'Cari Gejala', desc: 'Temukan gejala dari 200+ daftar klinis terstruktur' },
+      { icon: 'tune', title: 'Atur Keyakinan', desc: 'Tentukan seberapa yakin Anda mengalami gejala ini' },
+      { icon: 'analytics', title: 'Analisis CF', desc: 'Mesin inferensi Certainty Factor menghitung probabilitas penyakit' },
     ];
 
     return (
       <>
         <Navbar />
-        <main className="pt-24 pb-12 min-h-screen px-4 md:px-8 overflow-hidden relative border-t border-outline-variant/10">
+        <main className="pt-24 pb-16 min-h-screen px-4 md:px-8 relative overflow-hidden">
+          {/* Background blobs */}
           <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-container/20 blur-[80px]"></div>
-            <div className="absolute top-[40%] left-[-10%] w-[400px] h-[400px] rounded-full bg-tertiary-container/10 blur-[80px]"></div>
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-container/20 blur-[80px]" />
+            <div className="absolute top-[40%] left-[-10%] w-[400px] h-[400px] rounded-full bg-tertiary-container/10 blur-[80px]" />
           </div>
 
           <div className="max-w-3xl mx-auto flex flex-col items-center relative z-10">
-            {/* Hero Header */}
-            <div className="w-full text-center mb-10">
+            {/* Hero */}
+            <div className="w-full text-center mb-12">
               <div className="inline-flex items-center gap-2 bg-primary/5 text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-primary/10">
                 <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>stethoscope</span>
-                Sistem Analisis Gejala
+                Sistem Diagnosis Cerdas
               </div>
               <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-on-surface leading-tight">
                 Apa yang Anda <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">rasakan?</span>
               </h1>
               <p className="text-on-surface-variant font-medium text-lg max-w-xl mx-auto leading-relaxed">
-                Cari gejala atau langsung mulai diagnosis interaktif. Kami akan memandu Anda langkah demi langkah.
+                Pilih gejala dari database klinis kami, atur tingkat keyakinan, dan dapatkan analisis berbasis <strong>Certainty Factor</strong>.
               </p>
             </div>
 
-            {/* Smart Search */}
-            <div className="relative w-full max-w-lg mb-12">
-              <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
-                <input
-                  ref={searchRef}
-                  className="w-full pl-12 md:pl-14 pr-6 py-4 md:py-5 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary font-medium text-on-surface transition-all outline-none shadow-lg shadow-primary/5 placeholder:text-outline-variant text-sm md:text-base"
-                  placeholder="Cari gejala utama Anda (contoh: Pusing, Demam, Mual)"
-                  type="text"
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setShowSuggestions(true); }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-2 bg-surface-container-lowest backdrop-blur-xl border border-outline-variant/30 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-[320px] overflow-y-auto">
-                  {filteredSuggestions.map((s) => (
-                    <div key={s} onMouseDown={() => startFromSearch(s)} className="px-6 py-4 hover:bg-primary/5 cursor-pointer transition-colors flex items-center gap-3 border-b border-outline-variant/10 last:border-0">
-                      <span className="material-symbols-outlined text-primary text-xl">medical_information</span>
-                      <span className="font-medium text-on-surface">{s}</span>
-                      <span className="ml-auto material-symbols-outlined text-outline-variant text-sm">arrow_forward</span>
-                    </div>
-                  ))}
+            {/* Feature Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-10">
+              {highlights.map(h => (
+                <div key={h.title} className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/15 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+                  <div className="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary mb-4">
+                    <span className="material-symbols-outlined text-2xl">{h.icon}</span>
+                  </div>
+                  <h3 className="font-headline font-bold text-on-surface mb-1">{h.title}</h3>
+                  <p className="text-sm text-on-surface-variant leading-relaxed">{h.desc}</p>
                 </div>
-              )}
+              ))}
             </div>
 
-            {/* Start CTA */}
+            {/* CTA */}
             <button
-              onClick={() => startQuiz()}
-              className="w-full max-w-lg py-5 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl font-headline font-bold text-lg shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-3 mb-12 group"
+              onClick={() => setPhase('select')}
+              className="w-full max-w-lg py-5 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl font-headline font-bold text-lg shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
             >
-              <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300">play_arrow</span>
-              Mulai Diagnosis Interaktif
+              <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">play_arrow</span>
+              Mulai Pilih Gejala
             </button>
 
-            {/* Symptom Categories Grid */}
-            <div className="w-full mb-12">
-              <p className="text-center text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-6">Atau pilih kategori gejala</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {symptomCategories.map((cat) => (
-                  <button
-                    key={cat.label}
-                    onClick={() => {
-                      const matchQ = rootQuestions.find(q => q.category.includes(cat.label.split(' ')[0]) || cat.label.includes(q.category.split(' ')[0]));
-                      if (matchQ) startFromBodyArea(matchQ.bodyArea || 'body');
-                      else startQuiz();
-                    }}
-                    className={`group relative p-5 rounded-2xl bg-gradient-to-br ${cat.color} border ${cat.border} hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-left active:scale-[0.97] overflow-hidden`}
-                  >
-                    <div className={`w-11 h-11 rounded-xl bg-white flex items-center justify-center mb-3 shadow-sm ${cat.iconColor} group-hover:scale-110 transition-transform`}>
-                      <span className="material-symbols-outlined text-xl">{cat.icon}</span>
-                    </div>
-                    <h3 className="font-headline font-bold text-on-surface text-sm mb-0.5">{cat.label}</h3>
-                    <p className="text-xs text-on-surface-variant">{cat.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Bottom Cards */}
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Tips */}
-              <div className="bg-gradient-to-br from-tertiary/8 to-transparent p-6 rounded-2xl flex gap-4 items-start border border-tertiary/15">
-                <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-tertiary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
-                </div>
-                <div>
-                  <h4 className="font-headline font-bold text-on-surface mb-1">Panduan</h4>
-                  <p className="text-on-surface-variant text-sm leading-relaxed">Jawab jujur setiap pertanyaan. Sistem akan menyesuaikan pertanyaan lanjutan berdasarkan jawaban Anda.</p>
-                </div>
-              </div>
-
-              {/* Emergency */}
-              <div className="bg-gradient-to-br from-error/8 to-transparent p-6 rounded-2xl flex gap-4 items-start border border-error/15">
-                <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                  <span className="material-symbols-outlined text-error text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>emergency</span>
-                </div>
-                <div>
-                  <h4 className="font-headline font-bold text-on-surface mb-1">Darurat?</h4>
-                  <p className="text-on-surface-variant text-sm leading-relaxed">Nyeri dada hebat atau sesak napas? <a href="tel:112" className="text-error font-bold underline">Hubungi 112</a> segera.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-   *  RENDER: EMERGENCY RED FLAG SCREEN
-   * ═══════════════════════════════════════════════════════════════ */
-  if (phase === 'emergency') {
-    return (
-      <>
-        <Navbar />
-        <main className="fixed inset-0 bg-gradient-to-br from-red-600 via-red-700 to-red-900 z-[100] flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-white rounded-[2.5rem] p-10 text-center shadow-2xl">
-            <div className="w-24 h-24 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <span className="material-symbols-outlined text-error text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>crisis_alert</span>
-            </div>
-            <h2 className="text-3xl font-black text-on-surface mb-2 font-headline">🚨 PERINGATAN DARURAT</h2>
-            <p className="text-error font-bold text-lg mb-4">Gejala yang Anda alami memerlukan penanganan segera!</p>
-            <p className="text-on-surface-variant font-medium mb-8 leading-relaxed">
-              {emergencyMsg}
-            </p>
-            <p className="text-sm text-on-surface-variant mb-8 bg-error/5 p-4 rounded-xl border border-error/10">
-              Mohon segera kunjungi <strong>IGD terdekat</strong> atau hubungi layanan darurat.
-            </p>
-            <div className="flex flex-col gap-4">
-              <a href="tel:112" className="w-full py-5 bg-error text-white rounded-2xl font-black text-xl flex items-center justify-center gap-3 shadow-xl shadow-error/30 hover:scale-[1.02] active:scale-95 transition-all">
-                <span className="material-symbols-outlined">emergency</span> HUBUNGI 112
-              </a>
-              <Link href="/clinic" className="w-full py-4 bg-primary text-white rounded-2xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
-                <span className="material-symbols-outlined">location_on</span> Cari IGD Terdekat
-              </Link>
-              <button
-                onClick={() => {
-                  // Continue anyway - skip to next question
-                  setPhase('quiz');
-                  setCurrentQIdx(prev => prev + 1);
-                  setSelectedOption(null);
-                  if (currentQIdx + 1 >= questionQueue.length) {
-                    const selectedSymptoms = answers
-                      .filter(a => a.answer === 'ya' || a.answer === 'tidak_yakin')
-                      .map(a => ({ id: a.id, name: a.name, intensity: a.intensity, duration: a.duration }));
-                    localStorage.setItem('mediscan_last_diagnosis', JSON.stringify({
-                      symptoms: selectedSymptoms, timestamp: new Date().toISOString()
-                    }));
-                    setPhase('result');
-                  }
-                }}
-                className="w-full py-4 text-outline font-bold hover:text-on-surface transition-colors"
-              >
-                Lanjutkan Diagnosis
-              </button>
-            </div>
-          </div>
-        </main>
-      </>
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-   *  RENDER: RESULT SCREEN
-   * ═══════════════════════════════════════════════════════════════ */
-  if (phase === 'result') {
-    const activeSymptoms = answers.filter(a => a.answer === 'ya' || a.answer === 'tidak_yakin');
-    return (
-      <>
-        <Navbar />
-        <main className="pt-24 pb-12 min-h-screen px-4 md:px-8 relative border-t border-outline-variant/10">
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-container/20 blur-[80px]"></div>
-            <div className="absolute top-[40%] left-[-10%] w-[400px] h-[400px] rounded-full bg-tertiary-container/10 blur-[80px]"></div>
-          </div>
-
-          <div className="max-w-3xl mx-auto relative z-10 space-y-8">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-bold uppercase tracking-widest mb-4">
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
-                Hasil Analisis
-              </div>
-              <h1 className="font-headline text-4xl font-extrabold tracking-tight text-on-surface mb-2">Analisis Selesai</h1>
-              <p className="text-on-surface-variant font-medium text-lg">Berdasarkan {activeSymptoms.length} gejala yang dilaporkan</p>
-            </div>
-
-            {/* Probability Bars */}
-            <div className="bg-surface-container-lowest p-8 md:p-10 rounded-3xl shadow-xl shadow-primary/5 border border-white/60 space-y-6">
-              <h2 className="font-headline text-xl font-bold text-on-surface flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary-container text-primary flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined">bar_chart</span>
-                </div>
-                Kemungkinan Diagnosis
-              </h2>
-
-              {diagnosisResults.length === 0 ? (
-                <div className="text-center py-10">
-                  <span className="material-symbols-outlined text-5xl text-outline mb-4">sentiment_dissatisfied</span>
-                  <p className="text-on-surface-variant font-medium">Tidak cukup data untuk diagnosis. Coba jawab lebih banyak pertanyaan.</p>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {diagnosisResults.map((result, idx) => (
-                    <div key={result.name} className="space-y-2">
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <span className={`text-xs font-black uppercase tracking-widest ${idx === 0 ? 'text-primary' : 'text-on-surface-variant'}`}>
-                            {idx === 0 ? '🏆 Paling Mungkin' : `#${idx + 1}`}
-                          </span>
-                          <h3 className={`font-headline font-bold text-lg ${idx === 0 ? 'text-on-surface' : 'text-on-surface/80'}`}>{result.name}</h3>
-                        </div>
-                        <span className={`text-2xl font-black font-headline ${idx === 0 ? 'text-primary' : 'text-on-surface-variant'}`}>{result.probability}%</span>
-                      </div>
-                      <div className="w-full h-3 bg-surface-container-highest rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                            idx === 0 ? 'bg-gradient-to-r from-primary to-primary-container' :
-                            idx === 1 ? 'bg-gradient-to-r from-secondary to-secondary-container' :
-                            'bg-gradient-to-r from-tertiary to-tertiary-container'
-                          }`}
-                          style={{ width: `${result.probability}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-on-surface-variant"><span className="font-semibold">Penyebab:</span> {result.cause}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Symptoms Answered */}
-            <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
-              <h2 className="font-headline text-xl font-bold text-on-surface mb-4">Ringkasan Jawaban Anda</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {answers.map((a) => (
-                  <div key={a.id} className={`p-3 rounded-xl border text-sm font-medium flex items-center gap-2 ${
-                    a.answer === 'ya' ? 'bg-primary/5 border-primary/20 text-primary' :
-                    a.answer === 'tidak_yakin' ? 'bg-tertiary/5 border-tertiary/20 text-tertiary' :
-                    'bg-surface-container-low border-outline-variant/20 text-on-surface-variant'
-                  }`}>
-                    <span className="material-symbols-outlined text-base" style={a.answer === 'ya' ? { fontVariationSettings: "'FILL' 1" } : undefined}>
-                      {a.answer === 'ya' ? 'check_circle' : a.answer === 'tidak_yakin' ? 'help' : 'cancel'}
-                    </span>
-                    {a.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Treatment Advice */}
-            {diagnosisResults.length > 0 && (
-              <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10 space-y-4">
-                <h2 className="font-headline text-xl font-bold text-on-surface">Saran Penanganan</h2>
-                <div className="flex gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 group">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
-                    <span className="material-symbols-outlined">medication</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">Tindakan Mandiri</h4>
-                    <p className="text-sm text-on-surface-variant">{diagnosisResults[0].treatment}</p>
-                  </div>
-                </div>
-                <div className="flex gap-4 p-4 rounded-2xl bg-tertiary/5 border border-tertiary/10 group">
-                  <div className="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform shrink-0">
-                    <span className="material-symbols-outlined">shield</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-1">Pencegahan</h4>
-                    <p className="text-sm text-on-surface-variant">{diagnosisResults[0].prevention}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/diagnosis/result"
-                onClick={() => {
-                  const selectedSymptoms = answers
-                    .filter(a => a.answer === 'ya' || a.answer === 'tidak_yakin')
-                    .map(a => ({ id: a.id, name: a.name, intensity: a.intensity, duration: a.duration }));
-                  localStorage.setItem('mediscan_last_diagnosis', JSON.stringify({
-                    symptoms: selectedSymptoms, timestamp: new Date().toISOString()
-                  }));
-                }}
-                className="flex-1 py-4 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl font-headline font-bold text-lg shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined">description</span>
-                Lihat Laporan Lengkap
-              </Link>
-              <button
-                onClick={() => { setPhase('welcome'); setAnswers([]); setCurrentQIdx(0); }}
-                className="flex-1 py-4 bg-surface-container-low text-on-surface border border-outline-variant/20 rounded-2xl font-headline font-bold hover:bg-surface-container-high active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined">refresh</span>
-                Ulangi Diagnosis
-              </button>
-            </div>
-
-            {/* Disclaimer */}
-            <div className="bg-surface-dim/60 border border-outline-variant/20 rounded-2xl p-6">
+            {/* Disclaimer preview */}
+            <div className="mt-8 w-full bg-surface-dim/60 border border-outline-variant/20 rounded-2xl p-5">
               <div className="flex gap-3 items-start">
                 <span className="material-symbols-outlined text-outline text-xl shrink-0 mt-0.5">info</span>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  <strong className="text-on-surface">Perhatian:</strong> Hasil analisis ini berbasis komputasi awal dan <strong className="text-error">TIDAK</strong> menggantikan diagnosis resmi dari tenaga medis profesional. Segera konsultasikan dengan dokter untuk penanganan yang tepat.
+                  <strong className="text-on-surface">Perhatian:</strong> Hasil analisis ini berbasis komputasi awal dan <strong className="text-error">TIDAK</strong> menggantikan diagnosis resmi dari tenaga medis profesional.
                 </p>
               </div>
             </div>
@@ -610,164 +278,262 @@ export default function DiagnosisPage() {
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-   *  RENDER: QUIZ / QUESTION SCREEN (Typeform style)
-   * ═══════════════════════════════════════════════════════════════ */
+  /* ═════════════════════════════════════════════════════════════════════════
+   *  PHASE: SELECT SYMPTOMS
+   * ═════════════════════════════════════════════════════════════════════════ */
   return (
     <>
       <Navbar />
-      <main className="min-h-screen pt-24 pb-32 flex items-center justify-center px-4 relative overflow-hidden">
+      <main className="pt-24 pb-24 min-h-screen px-4 md:px-6 relative">
         {/* Background */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-container/20 blur-[80px]"></div>
-          <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-tertiary-container/10 blur-[80px]"></div>
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-primary-container/15 blur-[80px]" />
         </div>
 
-        <div className={`w-full max-w-[640px] flex flex-col gap-6 md:gap-8 relative z-10 transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
-
-          {/* Progress Tracker */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-end">
-              <span className="font-headline text-on-surface-variant font-semibold tracking-tight text-sm uppercase">Pertanyaan Diagnosis</span>
-              <span className="font-headline text-primary font-extrabold text-lg">
-                {currentQIdx + 1}<span className="text-on-surface-variant/40 font-medium">/{questionQueue.length}</span>
-              </span>
-            </div>
-            <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary-container rounded-full transition-all duration-700 ease-out"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Question Card */}
-          {currentQuestion && (
-            <div className="bg-surface-container-lowest p-6 md:p-12 rounded-3xl shadow-[0_8px_32px_rgba(25,27,35,0.04)] border border-outline-variant/15">
-              <div className="space-y-10">
-                {/* Category & Question */}
-                <div className="space-y-4">
-                  <div className="inline-flex items-center gap-2 bg-secondary-container/20 text-on-secondary-container px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>vital_signs</span>
-                    {currentQuestion.category}
-                  </div>
-                  <h1 className="text-2xl md:text-4xl font-headline font-extrabold text-on-surface leading-tight tracking-tight">
-                    {currentQuestion.question}
-                  </h1>
-                  <p className="text-on-surface-variant text-base md:text-lg leading-relaxed">
-                    Pilih jawaban yang paling sesuai dengan kondisi Anda saat ini.
-                  </p>
-                </div>
-
-                {/* Answer Options */}
-                <div className="grid grid-cols-1 gap-3">
-                  {/* Ya */}
-                  <button
-                    onClick={() => handleAnswer('ya')}
-                    className={`group flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 text-left active:scale-[0.98] ${
-                      selectedOption === 'ya'
-                        ? 'bg-primary/5 border-primary shadow-sm'
-                        : 'bg-surface-container-low border-transparent hover:border-primary/30 hover:bg-surface-container-highest'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 md:gap-4">
-                      <div className={`w-12 h-12 md:w-14 md:h-14 flex items-center justify-center rounded-xl shadow-sm transition-all duration-300 ${
-                        selectedOption === 'ya' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-white text-primary group-hover:bg-primary group-hover:text-white'
-                      }`}>
-                        <span className="material-symbols-outlined text-xl md:text-2xl" style={selectedOption === 'ya' ? { fontVariationSettings: "'FILL' 1" } : undefined}>check_circle</span>
-                      </div>
-                      <div>
-                        <span className={`text-lg md:text-xl font-bold block ${selectedOption === 'ya' ? 'text-primary' : 'text-on-surface'}`}>Ya</span>
-                        <span className="text-xs md:text-sm text-on-surface-variant">Saya mengalami gejala ini</span>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Tidak */}
-                  <button
-                    onClick={() => handleAnswer('tidak')}
-                    className={`group flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 text-left active:scale-[0.98] ${
-                      selectedOption === 'tidak'
-                        ? 'bg-primary/5 border-primary shadow-sm'
-                        : 'bg-surface-container-low border-transparent hover:border-primary/30 hover:bg-surface-container-highest'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 flex items-center justify-center rounded-xl shadow-sm transition-all duration-300 ${
-                        selectedOption === 'tidak' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-white text-on-surface-variant group-hover:bg-primary group-hover:text-white'
-                      }`}>
-                        <span className="material-symbols-outlined text-2xl">cancel</span>
-                      </div>
-                      <div>
-                        <span className={`text-xl font-bold block ${selectedOption === 'tidak' ? 'text-primary' : 'text-on-surface'}`}>Tidak</span>
-                        <span className="text-sm text-on-surface-variant">Saya tidak mengalaminya</span>
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Tidak Yakin */}
-                  <button
-                    onClick={() => handleAnswer('tidak_yakin')}
-                    className={`group flex items-center justify-between p-5 rounded-2xl border transition-all duration-300 text-left active:scale-[0.98] ${
-                      selectedOption === 'tidak_yakin'
-                        ? 'bg-primary/5 border-primary shadow-sm'
-                        : 'bg-surface-container-low border-transparent hover:border-primary/30 hover:bg-surface-container-highest'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 flex items-center justify-center rounded-xl shadow-sm transition-all duration-300 ${
-                        selectedOption === 'tidak_yakin' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-white text-tertiary group-hover:bg-primary group-hover:text-white'
-                      }`}>
-                        <span className="material-symbols-outlined text-2xl">help</span>
-                      </div>
-                      <div>
-                        <span className={`text-xl font-bold block ${selectedOption === 'tidak_yakin' ? 'text-primary' : 'text-on-surface'}`}>Tidak Yakin</span>
-                        <span className="text-sm text-on-surface-variant">Saya ragu tentang gejala ini</span>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <div className="mt-12 flex items-center justify-between">
-                <button
-                  onClick={goBack}
-                  className="text-on-surface-variant font-headline font-bold flex items-center gap-2 hover:text-on-surface transition-colors"
-                >
-                  <span className="material-symbols-outlined">arrow_back</span>
-                  Kembali
-                </button>
-                <span className="text-xs text-outline font-medium">
-                  {answers.filter(a => a.answer === 'ya').length} gejala terdeteksi
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Tip Card */}
-          {currentQuestion && (
-            <div className="bg-tertiary-fixed/20 p-6 rounded-2xl flex gap-4 items-start border border-tertiary-fixed-dim/15">
-              <span className="material-symbols-outlined text-tertiary flex-shrink-0 mt-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
-              <p className="text-sm text-on-surface-variant leading-relaxed font-medium">
-                <span className="font-bold text-on-surface">Tips:</span> {currentQuestion.tip}
+        <div className="max-w-7xl mx-auto relative z-10">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <button
+                onClick={() => setPhase('welcome')}
+                className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors mb-2"
+              >
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Kembali
+              </button>
+              <h1 className="font-headline text-2xl md:text-3xl font-extrabold text-on-surface">
+                Pilih Gejala Anda
+              </h1>
+              <p className="text-on-surface-variant text-sm mt-1">
+                Cari dan pilih semua gejala yang Anda rasakan, lalu atur tingkat keyakinannya.
               </p>
             </div>
-          )}
+
+            {/* Submit button — always visible */}
+            <button
+              onClick={handleSubmit}
+              disabled={selectedSymptoms.length === 0 || isSubmitting}
+              className="shrink-0 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span className="material-symbols-outlined">analytics</span>
+              {isSubmitting ? 'Memproses...' : `Analisis ${selectedSymptoms.length > 0 ? `(${selectedSymptoms.length})` : ''}`}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            {/* ── Left: Symptom Picker ───────────────────────────────────── */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Cari gejala (contoh: demam, batuk, nyeri...)"
+                  className="w-full pl-12 pr-4 py-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none text-on-surface placeholder:text-outline-variant shadow-sm"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
+                    <span className="material-symbols-outlined text-xl">close</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Category filter */}
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                      activeCategory === cat
+                        ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
+                        : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary/30 hover:text-primary'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Symptom List */}
+              {loadingSymptoms ? (
+                <div className="py-20 text-center">
+                  <span className="material-symbols-outlined text-primary text-5xl animate-spin mb-4">sync</span>
+                  <p className="text-on-surface-variant font-medium">Memuat daftar gejala dari server...</p>
+                </div>
+              ) : fetchError ? (
+                <div className="py-12 text-center bg-red-50 rounded-2xl border border-red-100 p-6">
+                  <span className="material-symbols-outlined text-red-400 text-4xl mb-3">error</span>
+                  <p className="text-red-600 font-semibold mb-4">{fetchError}</p>
+                  {fetchError.includes('login') && (
+                    <Link href="/login" className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition">
+                      Masuk Sekarang
+                    </Link>
+                  )}
+                </div>
+              ) : filteredSymptoms.length === 0 ? (
+                <div className="py-12 text-center">
+                  <span className="material-symbols-outlined text-outline text-5xl mb-3">search_off</span>
+                  <p className="text-on-surface-variant font-medium">Tidak ada gejala yang cocok dengan pencarian.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {filteredSymptoms.map(symptom => {
+                    const isSelected = selectedCodes.has(symptom.code);
+                    return (
+                      <button
+                        key={symptom.code}
+                        onClick={() => toggleSymptom(symptom)}
+                        className={`text-left p-4 rounded-2xl border transition-all duration-200 active:scale-[0.98] group ${
+                          isSelected
+                            ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary/50'
+                            : 'bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
+                            isSelected ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary'
+                          }`}>
+                            {isSelected
+                              ? <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                              : <span className="material-symbols-outlined text-xl">{getCategoryIcon(symptom.category)}</span>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`font-bold text-sm leading-tight ${isSelected ? 'text-primary' : 'text-on-surface'}`}>
+                                {symptom.name}
+                              </span>
+                              <span className="text-[10px] font-mono text-outline bg-surface-container px-1.5 py-0.5 rounded">
+                                {symptom.code}
+                              </span>
+                            </div>
+                            <span className="text-xs text-on-surface-variant mt-0.5 block">{symptom.category}</span>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Count info */}
+              {!loadingSymptoms && !fetchError && (
+                <p className="text-xs text-outline text-center pt-2">
+                  Menampilkan {filteredSymptoms.length} dari {allSymptoms.length} gejala
+                </p>
+              )}
+            </div>
+
+            {/* ── Right: Selected Symptoms Panel ────────────────────────── */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-28 space-y-4">
+                <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/15 shadow-sm overflow-hidden">
+                  {/* Panel header */}
+                  <div className="p-5 border-b border-outline-variant/10 bg-surface-container-low/50">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-headline font-bold text-on-surface flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-xl">checklist</span>
+                        Gejala Dipilih
+                      </h2>
+                      {selectedSymptoms.length > 0 && (
+                        <span className="px-2.5 py-1 bg-primary text-white text-xs font-black rounded-full">
+                          {selectedSymptoms.length}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selected list */}
+                  <div className="max-h-[500px] overflow-y-auto divide-y divide-outline-variant/10">
+                    {selectedSymptoms.length === 0 ? (
+                      <div className="py-12 px-6 text-center">
+                        <span className="material-symbols-outlined text-outline text-4xl mb-3">add_circle</span>
+                        <p className="text-sm text-on-surface-variant font-medium">
+                          Belum ada gejala yang dipilih. Klik gejala di sebelah kiri untuk menambahkan.
+                        </p>
+                      </div>
+                    ) : (
+                      selectedSymptoms.map(s => (
+                        <div key={s.code} className="p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-bold text-sm text-on-surface leading-tight">{s.name}</p>
+                              <p className="text-xs text-outline font-mono">{s.code}</p>
+                            </div>
+                            <button
+                              onClick={() => removeSymptom(s.code)}
+                              className="text-outline hover:text-error transition-colors shrink-0 mt-0.5"
+                            >
+                              <span className="material-symbols-outlined text-xl">close</span>
+                            </button>
+                          </div>
+                          {/* CF Level Selector — Dropdown */}
+                          <div className="mt-2">
+                            <select
+                              value={s.cfValue}
+                              onChange={(e) => updateCF(s.code, parseFloat(e.target.value))}
+                              className="w-full bg-surface-container-lowest border border-outline-variant/30 text-xs font-semibold rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface transition-all cursor-pointer hover:border-primary/40 appearance-none"
+                            >
+                              {CF_LEVELS.map(level => (
+                                <option key={level.key} value={level.value}>
+                                  Keyakinan: {level.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Footer action */}
+                  {selectedSymptoms.length > 0 && (
+                    <div className="p-4 border-t border-outline-variant/10 bg-surface-container-low/30">
+                      <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="w-full py-3.5 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
+                      >
+                        {isSubmitting ? 'Memproses...' : 'Analisis Sekarang →'}
+                      </button>
+                      <button
+                        onClick={() => setSelectedSymptoms([])}
+                        className="w-full mt-2 py-2 text-xs text-on-surface-variant hover:text-error transition-colors font-semibold"
+                      >
+                        Reset Pilihan
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+
+              </div>
+            </div>
+
+          </div>
         </div>
       </main>
 
-      {/* Floating Status Bar */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-40 hidden md:block">
-        <div className="bg-inverse-surface text-inverse-on-surface py-3 px-6 rounded-full shadow-2xl flex items-center justify-between opacity-90 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-xs font-semibold tracking-wide uppercase">AI Diagnosis Engine Active</span>
-          </div>
-          <div className="h-4 w-px bg-white/20"></div>
-          <span className="text-xs font-medium">Data dienkripsi</span>
+      {/* Floating submit button on mobile */}
+      {selectedSymptoms.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-outline-variant/10 lg:hidden z-40">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-lg rounded-xl shadow-xl shadow-primary/30 active:scale-95 transition-all disabled:opacity-60"
+          >
+            {isSubmitting ? 'Memproses...' : `Analisis ${selectedSymptoms.length} Gejala →`}
+          </button>
         </div>
-      </div>
+      )}
+
+      <MedicalDisclaimer />
+      <Footer />
     </>
   );
 }

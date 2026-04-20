@@ -8,23 +8,59 @@ import Link from "next/link";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Load saved email on mount
+  React.useEffect(() => {
+    const savedEmail = localStorage.getItem("mediscan_remembered_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!email || !password) return; // Simple validation
-    login(email);
-    router.push("/");
+    
+    try {
+      setLoading(true);
+      // Pass username/email, password, and rememberMe to the real backend
+      await login(email, password, rememberMe);
+      
+      // Save email for convenience next time if rememberMe is checked
+      if (rememberMe) {
+        localStorage.setItem("mediscan_remembered_email", email);
+      } else {
+        localStorage.removeItem("mediscan_remembered_email");
+      }
+      
+      router.push("/");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Gagal terhubung ke server. Periksa koneksi Anda.";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className="bg-background font-body text-on-surface flex flex-col min-h-screen">
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
         <div className="flex justify-between items-center px-6 py-4 max-w-[1440px] mx-auto">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent font-headline">
-            MediScan
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent font-headline flex items-center gap-2">
+            <img src="/logo.png" alt="Petit Hospital Logo" className="h-8 w-8 object-contain" />
+            Petit Hospital
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
             <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/">Beranda</Link>
@@ -56,6 +92,11 @@ export default function LoginPage() {
             </div>
 
             <form className="space-y-6" onSubmit={handleSubmit}>
+              {error && (
+                <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-semibold border border-red-100 mb-4 animate-in fade-in zoom-in-95">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <label className="block font-label text-xs font-bold tracking-widest text-slate-500 uppercase px-1">USERNAME / EMAIL</label>
                 <div className="relative">
@@ -87,11 +128,29 @@ export default function LoginPage() {
                 </div>
               </div>
 
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 bg-surface-container-highest rounded-md border border-outline/20 peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
+                      <span className="material-symbols-outlined text-white text-[16px] scale-0 peer-checked:scale-100 transition-transform font-bold">check</span>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">Ingat Saya</span>
+                </label>
+              </div>
+
               <button
                 type="submit"
-                className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-lg rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] active:scale-[0.98] transition-all"
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-headline font-bold text-lg rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] active:scale-[0.98] transition-all disabled:opacity-75 disabled:cursor-wait"
               >
-                Masuk
+                {loading ? 'Memproses...' : 'Masuk'}
               </button>
             </form>
 
@@ -106,7 +165,7 @@ export default function LoginPage() {
       {/* Footer */}
       <footer className="w-full py-8 mt-auto bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 gap-4 max-w-[1440px] mx-auto">
-          <p className="font-['Inter'] text-xs uppercase tracking-widest text-slate-400">© 2024 MediScan Diagnosis Platform. Hak Cipta Dilindungi.</p>
+          <p className="font-['Inter'] text-xs uppercase tracking-widest text-slate-400">© 2024 Petit Hospital Diagnosis Platform. Hak Cipta Dilindungi.</p>
           <div className="flex gap-6">
             <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Kebijakan Privasi</Link>
             <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Syarat & Ketentuan</Link>

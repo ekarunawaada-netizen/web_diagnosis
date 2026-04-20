@@ -9,7 +9,7 @@ const manrope = Manrope({ subsets: ["latin"], variable: '--font-manrope' });
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: "MediScan - Diagnosis Interaktif",
+  title: "Petit Hospital - Diagnosis Interaktif",
   description: "Platform Diagnosis Digital Terpercaya",
 };
 

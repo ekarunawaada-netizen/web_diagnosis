@@ -10,7 +10,6 @@ import { AVAILABLE_MODELS, ModelType } from "./ai-constants";
 export { AVAILABLE_MODELS };
 export type { ModelType };
 
-// Urutan fallback otomatis: Mulai dari yang teratas (terpintar) ke bawah
 const FALLBACK_CHAIN: ModelType[] = ['LLAMA3_70B', 'LLAMA3_8B', 'MIXTRAL'];
 
 // === KEPRIBADIAN VITARA ===
@@ -57,8 +56,6 @@ Anda adalah VITARA Assistant. Analisis gejala berikut dan berikan output HANYA d
 }
 `;
 
-
-// === FUNGSI DIAGNOSIS (Menggunakan llama3 70b untuk kecerdasan maksimal) ===
 export async function getDiagnosis(symptoms: string[]) {
   const prompt = `User melaporkan keluhan/gejala berikut: "${symptoms.join(", ")}". Berikan analisis lengkap dalam format JSON yang ketat!`;
 
@@ -68,9 +65,9 @@ export async function getDiagnosis(symptoms: string[]) {
         { role: "system", content: diagnosisJsonInstructions },
         { role: "user", content: prompt }
       ],
-      model: AVAILABLE_MODELS.LLAMA3_70B, // Sangat pintar untuk diagnosis
+      model: AVAILABLE_MODELS.LLAMA3_70B,
       response_format: { type: "json_object" },
-      temperature: 0.2, // Konsisten
+      temperature: 0.2,
     });
 
     const responseContent = chatCompletion.choices[0]?.message?.content || "{}";
@@ -80,13 +77,10 @@ export async function getDiagnosis(symptoms: string[]) {
     return null;
   }
 }
-
-// === FUNGSI CHAT DENGAN AUTO-FALLBACK ===
 export async function chatService(
   message: string,
-  history: { role: string; parts: { text: string }[] }[], // format lama dari gemini
+  history: { role: string; parts: { text: string }[] }[],
 ) {
-  // Ubah history dari format Gemini ke format OpenAI/Groq
   const groqHistory = history.map((item) => ({
     role: item.role === 'model' ? ('assistant' as const) : ('user' as const),
     content: item.parts.map(p => p.text).join(" ")

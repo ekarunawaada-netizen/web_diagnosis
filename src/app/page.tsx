@@ -22,7 +22,7 @@ const initialTestimonials = [
     name: "Siti Aisyah",
     role: "Pegawai Negeri, Surabaya",
     rating: 5,
-    text: "\"PDF laporannya sangat dihormati oleh spesialis lambung saya. Mereka langsung paham anatomi keluhan yang dirunut oleh AI MediScan. Tidak perlu tebak-tebakan dari nol lagi di meja praktek.\"",
+    text: "\"PDF laporannya sangat dihormati oleh spesialis lambung saya. Mereka langsung paham anatomi keluhan yang dirunut oleh AI Petit Hospital. Tidak perlu tebak-tebakan dari nol lagi di meja praktek.\"",
     avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80",
     isPrimary: false,
     transform: "md:-translate-y-6"
@@ -74,11 +74,11 @@ export default function Home() {
 
     const added = {
       id: Date.now(),
-      name: user.name,
-      role: "Pengguna MediScan",
+      name: user.username,
+      role: "Pengguna Petit Hospital",
       rating: newTestimonial.rating,
       text: `"${newTestimonial.text}"`,
-      avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.name)}`,
+      avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.username)}`,
       isPrimary: false
     };
 
@@ -126,7 +126,7 @@ export default function Home() {
               </h1>
               
               <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed font-medium">
-                Dapatkan analisis kesehatan secara cepat, akurat, dan mudah dipahami. MediScan membantu mengubah gejala yang Anda alami menjadi informasi medis yang jelas dalam hitungan detik.
+                Dapatkan analisis kesehatan secara cepat, akurat, dan mudah dipahami. Petit Hospital membantu mengubah gejala yang Anda alami menjadi informasi medis yang jelas dalam hitungan detik.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-5 pt-6">
@@ -231,7 +231,7 @@ export default function Home() {
             <div className="text-center mb-16 md:mb-20 space-y-5">
               <span className="text-primary font-bold tracking-widest uppercase text-sm">Keunggulan Website kami </span>
               <h2 className="text-3xl md:text-5xl font-black font-headline tracking-tighter text-on-surface">Dirancang melampaui Aplikasi Biasa.</h2>
-              <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">MediScan membantu Anda memahami kondisi kesehatan secara praktis, cepat, dan terpercaya.</p>
+              <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">Petit Hospital membantu Anda memahami kondisi kesehatan secara praktis, cepat, dan terpercaya.</p>
             </div>
             
             {/* Bento Layout Grid */}
@@ -360,7 +360,7 @@ export default function Home() {
                        <span className="material-symbols-outlined text-4xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
                      </div>
                      <h3 className="font-headline text-2xl font-black text-on-surface mb-3">Login Diperlukan</h3>
-                     <p className="text-on-surface-variant mb-8 text-sm leading-relaxed">Anda harus masuk ke akun MediScan terlebih dahulu sebelum dapat memberikan rating dan ulasan.</p>
+                     <p className="text-on-surface-variant mb-8 text-sm leading-relaxed">Anda harus masuk ke akun Petit Hospital terlebih dahulu sebelum dapat memberikan rating dan ulasan.</p>
                      <div className="flex gap-3">
                        <button onClick={() => setShowLoginPrompt(false)} className="flex-1 px-6 py-3.5 border-2 border-outline-variant/30 text-on-surface-variant font-bold rounded-xl hover:bg-surface-container transition-all active:scale-95">
                          Nanti Saja
@@ -382,7 +382,7 @@ export default function Home() {
                        <span className="material-symbols-outlined text-2xl">close</span>
                      </button>
                      <h3 className="font-headline text-2xl font-black text-on-surface mb-2">Tulis Pengalaman Anda</h3>
-                     <p className="text-on-surface-variant mb-6 text-sm">Bagaimana MediScan membantu kesehatan Anda? Ceritakan di sini.</p>
+                     <p className="text-on-surface-variant mb-6 text-sm">Bagaimana Petit Hospital membantu kesehatan Anda? Ceritakan di sini.</p>
                      
                      {/* Show logged-in user info */}
                      <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl mb-5">
@@ -391,7 +391,7 @@ export default function Home() {
                        </div>
                        <div>
                          <p className="text-xs font-bold text-outline uppercase tracking-wide">Memberikan ulasan sebagai</p>
-                         <p className="font-bold text-on-surface font-headline">{user.name}</p>
+                         <p className="font-bold text-on-surface font-headline">{user.username}</p>
                        </div>
                      </div>
 

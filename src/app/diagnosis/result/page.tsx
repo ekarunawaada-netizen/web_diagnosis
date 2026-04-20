@@ -5,67 +5,121 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
-import diseasesData from '@/data/diseases.json';
 
-interface Symptom {
-  id: string;
-  name: string;
-  intensity: number;
-  duration: number;
+// Symptom as stored by the new dynamic diagnosis page
+interface StoredSymptom {
+  symptomCode: string; // e.g. 'G001'
+  cfValue: number;     // 0–1
+  name: string;        // display name
+}
+
+// Shape of a single result item from POST /api/diagnose
+interface DiagnoseResult {
+  diseaseCode: string;
+  diseaseName: string;
+  description: string;
+  solution: string;
+  severity: string;
+  cfValue: number; // 0–1
 }
 
 export default function ResultPage() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [data, setData] = useState<{ symptoms: Symptom[], timestamp: string } | null>(null);
+  const [data, setData] = useState<{ symptoms: StoredSymptom[], timestamp: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [results, setResults] = useState<any[]>([]);
 
   useEffect(() => {
     const lastDiagnosis = localStorage.getItem('mediscan_last_diagnosis');
     if (lastDiagnosis) {
-      const parsedData = JSON.parse(lastDiagnosis);
-      setData(parsedData);
+      try {
+        const parsedData = JSON.parse(lastDiagnosis);
+        setData(parsedData);
+      } catch(e) {
+        setError('Data diagnosis tidak valid.');
+        setLoading(false);
+      }
+    } else {
+      setError('Tidak ada data diagnosis terbaru.');
+      setLoading(false);
     }
   }, []);
 
-  const results = useMemo(() => {
-    if (!data) return [];
+  useEffect(() => {
+    const fetchDiagnosis = async () => {
+      if (!data) return;
 
-    const userSymptomNames = data.symptoms.map(s => s.name.toLowerCase());
-    
-    const matches = diseasesData.map(disease => {
-      let score = 0;
-      let matchedCount = 0;
-      
-      disease.symptoms.forEach(s => {
-        if (userSymptomNames.includes(s.toLowerCase())) {
-          score += 1;
-          matchedCount += 1;
+      // The new format already has { symptomCode, cfValue } — pass directly
+      const symptomsPayload = data.symptoms.map((s: StoredSymptom) => ({
+        symptomCode: s.symptomCode,
+        cfValue: s.cfValue,
+      }));
+
+      if (symptomsPayload.length === 0) {
+        setError('Tidak ada gejala yang dipilih. Silakan ulangi diagnosis.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const apiClient = (await import('@/lib/axios')).default;
+
+        const response = await apiClient.post('/api/diagnose', {
+          symptoms: symptomsPayload,
+          options: { onlyActiveRules: true, minCF: 0 },
+        });
+
+        // Response shape: { success, data: { timestamp, userSymptoms, results[] } }
+        if (response.data?.success && Array.isArray(response.data.data?.results)) {
+          setResults(response.data.data.results);
+        } else {
+          setError('Format respons dari server tidak sesuai.');
         }
-      });
+      } catch (err: any) {
+        console.error('Diagnosis API Error:', err);
+        if (err.response?.status === 401) {
+          setError('Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.');
+        } else {
+          const msg = err.response?.data?.error || err.response?.data?.message || 'Gagal menghubungi server backend.';
+          setError(msg);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // Boost score if match is more specific
-      const probability = disease.symptoms.length > 0 ? Math.round((matchedCount / data.symptoms.length) * 100) : 0;
-      
-      return {
-        ...disease,
-        probability: Math.min(probability, 99), // Cap at 99%
-        matchedCount
-      };
-    });
-
-    return matches
-      .filter(m => m.matchedCount > 0)
-      .sort((a, b) => b.probability - a.probability || b.matchedCount - a.matchedCount)
-      .slice(0, 3);
+    fetchDiagnosis();
   }, [data]);
 
-  const topMatch = results[0] || {
-    name: 'Kondisi Tidak Teridentifikasi',
-    cause: 'Data gejala tidak cukup spesifik untuk diagnosa otomatis.',
-    treatment: 'Konsultasikan dengan tenaga medis profesional.',
-    prevention: 'Jaga gaya hidup sehat dan pola makan teratur.',
-    probability: 15
-  };
+  // Map the real API result shape to the display format used in the template
+  const topMatch = useMemo(() => {
+    if (results.length === 0) return {
+      name: 'Kondisi Tidak Teridentifikasi',
+      cause: 'Data gejala tidak cukup spesifik untuk diagnosa otomatis.',
+      treatment: 'Konsultasikan dengan tenaga medis profesional.',
+      prevention: 'Jaga gaya hidup sehat dan pola makan teratur.',
+      probability: 0,
+    };
+    const r = results[0] as DiagnoseResult;
+    return {
+      name: r.diseaseName,
+      cause: r.description,
+      treatment: r.solution,
+      prevention: 'Konsultasikan dengan dokter untuk langkah pencegahan.',
+      probability: Math.round(r.cfValue * 100),
+    };
+  }, [results]);
+
+  // Remaining results for the sidebar
+  const otherResults = useMemo(() =>
+    results.slice(1).map((r: DiagnoseResult) => ({
+      name: r.diseaseName,
+      probability: Math.round(r.cfValue * 100),
+    }))
+  , [results]);
 
   useEffect(() => {
     if (data && results.length > 0) {
@@ -78,7 +132,7 @@ export default function ResultPage() {
           id: Math.random().toString(36).substr(2, 9),
           date: data.timestamp,
           timestamp: data.timestamp,
-          symptoms: data.symptoms.map((s: Symptom) => s.name),
+          symptoms: data.symptoms.map((s: StoredSymptom) => s.name),
           diagnosis: topMatch.name,
           probability: topMatch.probability
         };
@@ -103,7 +157,7 @@ export default function ResultPage() {
       pdfContainer.style.width = '800px';
       pdfContainer.innerHTML = `
         <div style="font-family: sans-serif; color: #1e293b;">
-          <h1 style="color: #2563eb; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">Laporan Diagnosis MediScan</h1>
+          <h1 style="color: #2563eb; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">Laporan Diagnosis Petit Hospital</h1>
           <p style="font-size: 14px; color: #64748b;">Tanggal: ${new Date(data?.timestamp || Date.now()).toLocaleString('id-ID')}</p>
           
           <div style="margin-top: 30px;">
@@ -111,7 +165,7 @@ export default function ResultPage() {
             <ul style="list-style: none; padding: 0;">
               ${data?.symptoms.map(s => `
                 <li style="background: #f8fafc; margin-bottom: 10px; padding: 15px; border-radius: 12px; border-left: 4px solid #3b82f6;">
-                  <strong>${s.name}</strong> - Intensitas: ${s.intensity}/3, Durasi: ${s.duration} Hari
+                  <strong>${s.name}</strong>
                 </li>
               `).join('')}
             </ul>
@@ -262,7 +316,22 @@ export default function ResultPage() {
             <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
           </section>
 
+          {/* Loading or Error States */}
+          {loading && (
+            <div className="py-20 text-center animate-pulse">
+              <span className="material-symbols-outlined text-5xl text-primary mb-4 animate-spin">sync</span>
+              <p className="text-xl font-bold">Menganalisis Gejala Anda dari Server...</p>
+            </div>
+          )}
+          {!loading && error && (
+            <div className="bg-red-50 text-red-600 p-6 rounded-2xl text-center border border-red-200">
+              <span className="material-symbols-outlined text-4xl mb-2">error</span>
+              <p className="font-bold">{error}</p>
+            </div>
+          )}
+
           {/* Diagnosis Bento Grid */}
+          {!loading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Primary Condition */}
             <div className="md:col-span-2 space-y-6">
@@ -282,18 +351,16 @@ export default function ResultPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 rounded-2xl bg-secondary-container/20 border border-secondary-container/30">
-                    <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Durasi Gejala</span>
+                    <span className="text-xs font-bold text-secondary uppercase tracking-wider block mb-1">Gejala Dipilih</span>
                     <span className="text-lg font-semibold">
-                      {data?.symptoms.find(s => s.duration > 0)?.duration || 3}-7 Hari
+                      {data?.symptoms.length || 0} Gejala
                     </span>
                   </div>
                   <div className="p-4 rounded-2xl bg-tertiary-fixed/20 border border-tertiary-fixed/30">
                     <span className="text-xs font-bold text-tertiary uppercase tracking-wider block mb-1">Tingkat Keparahan</span>
-                    <div className="flex gap-1 mt-1">
-                      <div className="h-2 w-8 rounded-full bg-tertiary"></div>
-                      <div className={`h-2 w-8 rounded-full ${data?.symptoms.some(s => s.intensity >= 2) ? 'bg-tertiary' : 'bg-surface-container-highest'}`}></div>
-                      <div className={`h-2 w-8 rounded-full ${data?.symptoms.some(s => s.intensity >= 3) ? 'bg-tertiary' : 'bg-surface-container-highest'}`}></div>
-                    </div>
+                    <span className="text-sm font-semibold capitalize">
+                      {(results[0] as DiagnoseResult)?.severity || 'moderate'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -302,15 +369,19 @@ export default function ResultPage() {
               <div className="bg-surface-container-lowest p-8 rounded-3xl shadow-sm border border-outline-variant/10">
                 <h2 className="text-2xl font-bold text-on-surface mb-6 font-headline">Detail Gejala Anda</h2>
                 <div className="flex flex-wrap gap-3">
-                  {data?.symptoms.map((s) => (
-                    <div key={s.id} className="px-5 py-3 bg-white border border-outline-variant/20 rounded-2xl shadow-sm flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${s.intensity === 3 ? 'bg-error' : s.intensity === 2 ? 'bg-tertiary' : 'bg-primary'}`}></div>
-                      <div>
-                        <p className="font-bold text-sm text-on-surface">{s.name}</p>
-                        <p className="text-[10px] text-outline font-bold uppercase">{s.duration} Hari • {s.intensity === 3 ? 'Parah' : s.intensity === 2 ? 'Sedang' : 'Ringan'}</p>
+                  {data?.symptoms.map((s) => {
+                    const cfLabel = s.cfValue >= 0.9 ? 'Pasti' : s.cfValue >= 0.7 ? 'Kemungkinan Besar' : 'Mungkin';
+                    const dotColor = s.cfValue >= 0.9 ? 'bg-error' : s.cfValue >= 0.7 ? 'bg-tertiary' : 'bg-primary';
+                    return (
+                      <div key={s.symptomCode} className="px-4 py-3 bg-white border border-outline-variant/20 rounded-2xl shadow-sm flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`}></div>
+                        <div>
+                          <p className="font-bold text-sm text-on-surface">{s.name}</p>
+                          <p className="text-[10px] text-outline font-mono">{s.symptomCode} · {cfLabel}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -346,7 +417,7 @@ export default function ResultPage() {
               <div className="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10">
                 <h3 className="font-bold mb-4 font-headline">Kemungkinan Lain</h3>
                 <div className="space-y-4">
-                  {results.slice(1).map((item) => (
+                  {otherResults.map((item: { name: string; probability: number }) => (
                     <div key={item.name}>
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span>{item.name}</span>
@@ -357,7 +428,7 @@ export default function ResultPage() {
                       </div>
                     </div>
                   ))}
-                  {results.length <= 1 && (
+                  {otherResults.length === 0 && (
                     <p className="text-xs text-slate-400 italic">Tidak ada kemungkinan lain yang signifikan.</p>
                   )}
                 </div>
@@ -389,6 +460,7 @@ export default function ResultPage() {
               </div>
             </div>
           </div>
+          )}
 
           {/* Urgent Banner */}
           <div className="bg-tertiary-container/10 border-l-4 border-tertiary-container p-6 rounded-2xl flex items-center gap-6">

@@ -9,12 +9,12 @@ import Image from 'next/image';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   
   // Profile Form States
-  const [name, setName] = useState(user?.name || 'Pasien MediScan');
-  const [email, setEmail] = useState(user?.email || 'pasien@mediscan.id');
+  const [name, setName] = useState(user?.username || 'Pasien MediScan');
+  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('+62 812 3456 7890');
   
   // Security Form States
@@ -30,8 +30,8 @@ export default function SettingsPage() {
 
   const handleProfileSave = (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, name);
-    alert('Profil Anda yang baru telah dipublikasikan secara mendunia lewat MediScan Network.');
+    // Note: Profile update API not yet connected — this is a UI-only save
+    alert('Profil Anda telah disimpan secara lokal.');
     router.refresh();
   };
 

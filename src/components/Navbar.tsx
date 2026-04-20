@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
@@ -36,8 +37,9 @@ export default function Navbar() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
       <div className="flex justify-between items-center px-4 sm:px-6 py-4 max-w-[1440px] mx-auto">
-        <Link href="/" onClick={closeMenus} className="text-2xl font-bold bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent font-headline shrink-0">
-          MediScan
+        <Link href="/" onClick={closeMenus} className="text-2xl font-bold bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent font-headline shrink-0 flex items-center gap-2">
+          <Image src="/logo.png" alt="Petit Hospital Logo" width={32} height={32} className="object-contain" />
+          Petit Hospital
         </Link>
         
         {/* Desktop Menu */}
@@ -71,8 +73,8 @@ export default function Navbar() {
                           <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">health_and_safety</span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Selamat datang di MediScan!</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Platform AI kami sudah siap mendiagnosis keluhan Anda. Coba mulai ceritakan gejala Anda ke Chatbot Vitara!</p>
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Selamat datang di Petit Hospital!</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">Platform AI kami sudah siap mendiagnosis keluhan Anda. Coba mulai ceritakan gejala Anda ke Chatbot!</p>
                           <p className="text-[10px] font-medium text-blue-600 dark:text-blue-400 mt-2">Baru saja</p>
                         </div>
                       </div>
@@ -91,7 +93,7 @@ export default function Navbar() {
             <div className="flex items-center gap-1 sm:gap-3">
               <Link href="/settings" onClick={closeMenus} className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg font-semibold text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
                 <span className="material-symbols-outlined text-[20px]">account_circle</span>
-                <span className="hidden sm:inline">{user.name}</span>
+              <span className="hidden sm:inline">{user.username}</span>
               </Link>
               <button 
                 onClick={() => { logout(); closeMenus(); }}

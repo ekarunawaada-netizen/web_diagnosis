@@ -24,29 +24,11 @@ export default function ChatWindow({ mode, onClose, onFullscreen }: ChatWindowPr
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load history from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('mediscan_chat_history');
-    if (saved) {
-      try {
-        setMessages(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse chat history", e);
-      }
-    }
-  }, []);
-
-  // Save history to localStorage whenever messages change
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('mediscan_chat_history', JSON.stringify(messages));
-    }
-  }, [messages]);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Reset scroll to bottom when messages or loading state changes
   useEffect(() => {
     scrollToBottom();
   }, [messages, loading]);
@@ -126,9 +108,8 @@ export default function ChatWindow({ mode, onClose, onFullscreen }: ChatWindowPr
   };
 
   const handleClearHistory = () => {
-    if (confirm("Apakah Anda yakin ingin menghapus semua riwayat percakapan?")) {
+    if (confirm("Apakah Anda yakin ingin menghapus semua pesan?")) {
       setMessages([]);
-      localStorage.removeItem('mediscan_chat_history');
     }
   };
 

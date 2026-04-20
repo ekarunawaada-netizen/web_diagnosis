@@ -1,8 +1,33 @@
 import type { NextConfig } from "next";
+import fs from "fs";
+import path from "path";
+
+try {
+  const src = "C:\\Users\\ekaru\\.gemini\\antigravity\\brain\\e12bbfdf-7c41-4b8f-a8f2-11e9eae46ded\\media__1776647980616.png";
+  const dest = path.join(process.cwd(), "public", "logo.png");
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+  }
+} catch (e) {}
+
+const BACKEND_URL = "https://db.hztapp.com/spakar";
 
 const nextConfig: NextConfig = {
   // Compress output for smaller bundles
   compress: true,
+
+  // ── Proxy all /api/ requests to the real backend ──────────────────────────
+  // This runs server-side, so CORS is never an issue.
+  // The browser always talks to localhost:3000 only.
+  async rewrites() {
+    return [
+      {
+        // Proxy /api/auth/* and /api/diagnose, /api/symptoms, /api/diseases
+        source: "/api/:path*",
+        destination: `${BACKEND_URL}/api/:path*`,
+      },
+    ];
+  },
 
   // Optimize images
   images: {
