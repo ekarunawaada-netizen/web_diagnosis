@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
 import { useRouter } from 'next/navigation';
 
-/* ─── TYPES ──────────────────────────────────────────────────────────────── */
+/* ─── TYPES ───────────────────────────────────────────────────────────────── */
 interface ApiSymptom {
   id: number;
   code: string;
@@ -17,514 +17,517 @@ interface ApiSymptom {
   category: string;
 }
 
-interface SelectedSymptom extends ApiSymptom {
-  cfValue: number; // 0.9 = pasti, 0.75 = kemungkinan besar, 0.5 = mungkin
-}
-
-/* ─── CF LEVEL OPTIONS ───────────────────────────────────────────────────── */
-/* ─── CF CONFIDENCE LEVELS (matches backend USER_CONFIDENCE_LEVELS) ────── */
-const CF_LEVELS = [
+/* ─── 6 KATEGORI ─────────────────────────────────────────────────────────── */
+const CATEGORIES = [
   {
-    key: 'definitely_not',
-    label: 'Tidak Sama Sekali',
-    shortLabel: 'Tidak',
-    value: 0,
-    icon: 'do_not_disturb_on',
-    color: 'text-slate-500',
-    bg: 'bg-slate-100 border-slate-300',
+    id: 'demam',
+    label: 'Demam & Infeksi',
+    desc: 'Demam, menggigil, lemas, keringat malam',
+    icon: '🌡️',
+    color: '#ef4444',
+    bg: '#fef2f2',
+    border: '#fecaca',
+    apiCat: ['Umum'],
   },
   {
-    key: 'maybe_not',
-    label: 'Mungkin Tidak',
-    shortLabel: 'Mungkin Tidak',
-    value: 0.25,
-    icon: 'thumb_down',
-    color: 'text-blue-500',
-    bg: 'bg-blue-50 border-blue-200',
+    id: 'napas',
+    label: 'Napas & Jantung',
+    desc: 'Sesak napas, batuk, nyeri dada, jantung berdebar',
+    icon: '🫁',
+    color: '#e11d48',
+    bg: '#fff1f2',
+    border: '#fecdd3',
+    apiCat: ['Pernapasan', 'Kardiovaskular'],
   },
   {
-    key: 'unknown',
-    label: 'Tidak Tahu',
-    shortLabel: 'Tidak Tahu',
-    value: 0.5,
-    icon: 'help',
-    color: 'text-yellow-600',
-    bg: 'bg-yellow-50 border-yellow-200',
+    id: 'perut',
+    label: 'Perut & Pencernaan',
+    desc: 'Mual, muntah, diare, sakit perut',
+    icon: '🤢',
+    color: '#d97706',
+    bg: '#fffbeb',
+    border: '#fde68a',
+    apiCat: ['Gastrointestinal'],
   },
   {
-    key: 'maybe_yes',
-    label: 'Mungkin Ya',
-    shortLabel: 'Mungkin Ya',
-    value: 0.75,
-    icon: 'thumb_up',
-    color: 'text-orange-500',
-    bg: 'bg-orange-50 border-orange-200',
+    id: 'otot',
+    label: 'Otot & Sendi',
+    desc: 'Nyeri sendi, pegal, kaku otot, bengkak',
+    icon: '🦴',
+    color: '#7c3aed',
+    bg: '#f5f3ff',
+    border: '#ddd6fe',
+    apiCat: ['Muskuloskeletal'],
   },
   {
-    key: 'definitely_yes',
-    label: 'Pasti',
-    shortLabel: 'Pasti',
-    value: 1.0,
-    icon: 'check_circle',
-    color: 'text-red-500',
-    bg: 'bg-red-50 border-red-200',
+    id: 'kepala',
+    label: 'Kepala & Saraf',
+    desc: 'Sakit kepala, pusing, gangguan tidur, cemas',
+    icon: '🧠',
+    color: '#2563eb',
+    bg: '#eff6ff',
+    border: '#bfdbfe',
+    apiCat: ['Neurologi', 'Psikiatri', 'Mata', 'THT'],
+  },
+  {
+    id: 'kulit',
+    label: 'Kulit & Lainnya',
+    desc: 'Gatal, ruam, masalah kemih, gangguan hormon',
+    icon: '🌿',
+    color: '#059669',
+    bg: '#ecfdf5',
+    border: '#a7f3d0',
+    apiCat: ['Dermatologi', 'Endokrin', 'Urologi', 'Ginekologi', 'Andrologi', 'Onkologi'],
   },
 ];
 
+/* ─── TEMPLATE PERTANYAAN ────────────────────────────────────────────────── */
+// Output: "Apakah Anda mengalami " + nama gejala + "?"
+function buatPertanyaan(nama: string): string {
+  const n = nama.trim();
+  return 'Apakah Anda mengalami ' + n.charAt(0).toLowerCase() + n.slice(1) + '?';
+}
 
-/* ─── CATEGORY ICONS ────────────────────────────────────────────────────── */
-const CATEGORY_ICON: Record<string, string> = {
-  'Sistem Pernapasan': 'air',
-  'Sistem Pencernaan': 'gastroenterology',
-  'Psikiatri': 'psychology',
-  'Nyeri': 'sentiment_very_dissatisfied',
-  'Gejala Umum': 'monitor_heart',
-  'Sistem Saraf': 'neurology',
-  'Kulit': 'dermatology',
-  'Kardiovaskular': 'cardiology',
-  'Default': 'medical_information',
-};
-
-const getCategoryIcon = (category: string) =>
-  CATEGORY_ICON[category] || CATEGORY_ICON['Default'];
-
-/* ─── COMPONENT ─────────────────────────────────────────────────────────── */
+/* ─── KOMPONEN UTAMA ─────────────────────────────────────────────────────── */
 export default function DiagnosisPage() {
   const router = useRouter();
-  const searchRef = useRef<HTMLInputElement>(null);
 
-  // ── Data State ──────────────────────────────────────────────────────────
+  // Data dari API
   const [allSymptoms, setAllSymptoms] = useState<ApiSymptom[]>([]);
-  const [loadingSymptoms, setLoadingSymptoms] = useState(true);
-  const [fetchError, setFetchError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // ── UI State ────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<'welcome' | 'select' | 'review'>('welcome');
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Semua');
-  const [selectedSymptoms, setSelectedSymptoms] = useState<SelectedSymptom[]>([]);
+  // UI State
+  const [step, setStep] = useState<1 | 2>(1);
+  const [activeCatId, setActiveCatId] = useState('');
+
+  // Jawaban: code → 1.0 (Ya) | 0.7 (Sering) | 0.3 (Jarang) | null (tidak dipilih/Tidak ada)
+  const [answers, setAnswers] = useState<Record<string, 1.0 | 0.7 | 0.3 | null>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ── Fetch symptoms from API ──────────────────────────────────────────────
+  // Fetch gejala dari API
   useEffect(() => {
-    if (phase !== 'select' && phase !== 'welcome') return;
-    const fetchSymptoms = async () => {
+    (async () => {
       try {
-        setLoadingSymptoms(true);
         const apiClient = (await import('@/lib/axios')).default;
         const res = await apiClient.get('/api/diagnose/symptoms');
-        // Response: { success: true, data: [...] }
         const data = res.data?.data ?? res.data;
-        if (Array.isArray(data)) {
-          setAllSymptoms(data);
-        } else {
-          setFetchError('Format data gejala tidak valid dari server.');
-        }
-      } catch (err: any) {
-        setFetchError(
-          err.response?.status === 401
-            ? 'Silakan login untuk mengakses fitur diagnosis.'
-            : 'Gagal memuat daftar gejala. Periksa koneksi Anda.'
+        if (Array.isArray(data)) setAllSymptoms(data);
+        else setError('Data gejala tidak valid dari server.');
+      } catch (e: any) {
+        setError(
+          e.response?.status === 401
+            ? 'Silakan login terlebih dahulu.'
+            : 'Gagal memuat data. Periksa koneksi internet.'
         );
       } finally {
-        setLoadingSymptoms(false);
+        setLoading(false);
       }
-    };
-    fetchSymptoms();
-  }, [phase]);
-
-  // ── Derived data ────────────────────────────────────────────────────────
-  const categories = useMemo(() => {
-    const cats = new Set(allSymptoms.map(s => s.category));
-    return ['Semua', ...Array.from(cats).sort()];
-  }, [allSymptoms]);
-
-  const filteredSymptoms = useMemo(() => {
-    let list = allSymptoms;
-    if (activeCategory !== 'Semua') {
-      list = list.filter(s => s.category === activeCategory);
-    }
-    if (search.trim().length > 0) {
-      const q = search.toLowerCase();
-      list = list.filter(s =>
-        s.name.toLowerCase().includes(q) ||
-        s.category.toLowerCase().includes(q) ||
-        s.code.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [allSymptoms, activeCategory, search]);
-
-  const selectedCodes = useMemo(() => new Set(selectedSymptoms.map(s => s.code)), [selectedSymptoms]);
-
-  // ── Actions ──────────────────────────────────────────────────────────────
-  const toggleSymptom = useCallback((symptom: ApiSymptom) => {
-    setSelectedSymptoms(prev => {
-      if (prev.some(s => s.code === symptom.code)) {
-        return prev.filter(s => s.code !== symptom.code);
-      }
-      // Default: definitely_yes = 1.0
-      return [...prev, { ...symptom, cfValue: 1.0 }];
-    });
+    })();
   }, []);
 
-  const updateCF = useCallback((code: string, cfValue: number) => {
-    setSelectedSymptoms(prev =>
-      prev.map(s => s.code === code ? { ...s, cfValue } : s)
-    );
-  }, []);
+  // Kategori aktif
+  const activeCat = CATEGORIES.find(c => c.id === activeCatId) ?? null;
 
-  const removeSymptom = useCallback((code: string) => {
-    setSelectedSymptoms(prev => prev.filter(s => s.code !== code));
-  }, []);
+  // Daftar gejala untuk kategori aktif — urutkan bobot tertinggi, maks 15
+  const symptoms = useMemo(() => {
+    if (!activeCat) return [];
+    return allSymptoms
+      .filter(s => activeCat.apiCat.includes(s.category))
+      .sort((a, b) => parseFloat(b.weight ?? '0') - parseFloat(a.weight ?? '0'))
+      .slice(0, 15);
+  }, [allSymptoms, activeCat]);
 
-  const handleSubmit = useCallback(async () => {
-    if (selectedSymptoms.length === 0) return;
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        // Exclude symptoms with CF=0 (definitely_not) — they add no information
-        symptoms: selectedSymptoms
-          .filter(s => s.cfValue > 0)
-          .map(s => ({
-            symptomCode: s.code,
-            cfValue: s.cfValue,
-            name: s.name,
-          })),
-        timestamp: new Date().toISOString(),
-      };
-      if (payload.symptoms.length === 0) {
-        setIsSubmitting(false);
-        return;
-      }
-      localStorage.setItem('mediscan_last_diagnosis', JSON.stringify(payload));
-      localStorage.removeItem('mediscan_ongoing_diagnosis');
-      router.push('/diagnosis/result');
-    } catch {
-      setIsSubmitting(false);
-    }
-  }, [selectedSymptoms, router]);
+  // Gejala yang dijawab Ya/Mungkin untuk dikirim
+  const gejalaTerpilih = useMemo(() =>
+    allSymptoms
+      .filter(s => answers[s.code] != null)
+      .map(s => ({ ...s, cfValue: answers[s.code] as number })),
+    [allSymptoms, answers]
+  );
 
-  /* ═════════════════════════════════════════════════════════════════════════
-   *  PHASE: WELCOME
-   * ═════════════════════════════════════════════════════════════════════════ */
-  if (phase === 'welcome') {
-    const highlights = [
-      { icon: 'search', title: 'Cari Gejala', desc: 'Temukan gejala dari 200+ daftar klinis terstruktur' },
-      { icon: 'tune', title: 'Atur Keyakinan', desc: 'Tentukan seberapa yakin Anda mengalami gejala ini' },
-      { icon: 'analytics', title: 'Analisis CF', desc: 'Mesin inferensi Certainty Factor menghitung probabilitas penyakit' },
-    ];
-
-    return (
-      <>
-        <Navbar />
-        <main className="pt-24 pb-16 min-h-screen px-4 md:px-8 relative overflow-hidden">
-          {/* Background blobs */}
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary-container/20 blur-[80px]" />
-            <div className="absolute top-[40%] left-[-10%] w-[400px] h-[400px] rounded-full bg-tertiary-container/10 blur-[80px]" />
-          </div>
-
-          <div className="max-w-3xl mx-auto flex flex-col items-center relative z-10">
-            {/* Hero */}
-            <div className="w-full text-center mb-12">
-              <div className="inline-flex items-center gap-2 bg-primary/5 text-primary px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-primary/10">
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>stethoscope</span>
-                Sistem Diagnosis Cerdas
-              </div>
-              <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mb-4 text-on-surface leading-tight">
-                Apa yang Anda <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-container">rasakan?</span>
-              </h1>
-              <p className="text-on-surface-variant font-medium text-lg max-w-xl mx-auto leading-relaxed">
-                Pilih gejala dari database klinis kami, atur tingkat keyakinan, dan dapatkan analisis berbasis <strong>Certainty Factor</strong>.
-              </p>
-            </div>
-
-            {/* Feature Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-10">
-              {highlights.map(h => (
-                <div key={h.title} className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/15 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-                  <div className="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary mb-4">
-                    <span className="material-symbols-outlined text-2xl">{h.icon}</span>
-                  </div>
-                  <h3 className="font-headline font-bold text-on-surface mb-1">{h.title}</h3>
-                  <p className="text-sm text-on-surface-variant leading-relaxed">{h.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <button
-              onClick={() => setPhase('select')}
-              className="w-full max-w-lg py-5 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl font-headline font-bold text-lg shadow-xl shadow-primary/20 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group"
-            >
-              <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">play_arrow</span>
-              Mulai Pilih Gejala
-            </button>
-
-            {/* Disclaimer preview */}
-            <div className="mt-8 w-full bg-surface-dim/60 border border-outline-variant/20 rounded-2xl p-5">
-              <div className="flex gap-3 items-start">
-                <span className="material-symbols-outlined text-outline text-xl shrink-0 mt-0.5">info</span>
-                <p className="text-sm text-on-surface-variant leading-relaxed">
-                  <strong className="text-on-surface">Perhatian:</strong> Hasil analisis ini berbasis komputasi awal dan <strong className="text-error">TIDAK</strong> menggantikan diagnosis resmi dari tenaga medis profesional.
-                </p>
-              </div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
+  // Pilih jawaban — klik yang sama = toggle off
+  function jawab(code: string, val: 1.0 | 0.7 | 0.3) {
+    setAnswers(prev => ({
+      ...prev,
+      [code]: prev[code] === val ? null : val,
+    }));
   }
 
-  /* ═════════════════════════════════════════════════════════════════════════
-   *  PHASE: SELECT SYMPTOMS
-   * ═════════════════════════════════════════════════════════════════════════ */
+  // Masuk ke Step 2
+  function pilihKategori(catId: string) {
+    setActiveCatId(catId);
+    setStep(2);
+  }
+
+  // Kembali ke Step 1
+  function kembali() {
+    setStep(1);
+    setActiveCatId('');
+  }
+
+  // Kirim diagnosis
+  async function kirimDiagnosis() {
+    if (gejalaTerpilih.length === 0) return;
+    setIsSubmitting(true);
+    const payload = {
+      symptoms: gejalaTerpilih.map(s => ({
+        symptomCode: s.code,
+        cfValue: s.cfValue,
+        name: s.name,
+      })),
+      timestamp: new Date().toISOString(),
+    };
+    localStorage.setItem('mediscan_last_diagnosis', JSON.stringify(payload));
+    router.push('/diagnosis/result');
+  }
+
+  /* ═══════════════════════════════════════════════ RENDER ══════════════════ */
   return (
     <>
       <Navbar />
-      <main className="pt-24 pb-24 min-h-screen px-4 md:px-6 relative">
-        {/* Background */}
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-primary-container/15 blur-[80px]" />
-        </div>
+      <main style={{
+        paddingTop: 64,
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#f8fafc',
+        overflow: step === 2 ? 'hidden' : 'auto',
+      }}>
+        <div style={{
+          maxWidth: 680,
+          width: '100%',
+          margin: '0 auto',
+          padding: step === 2 ? '0' : '24px 16px',
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <button
-                onClick={() => setPhase('welcome')}
-                className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors mb-2"
-              >
-                <span className="material-symbols-outlined text-base">arrow_back</span>
-                Kembali
-              </button>
-              <h1 className="font-headline text-2xl md:text-3xl font-extrabold text-on-surface">
-                Pilih Gejala Anda
-              </h1>
-              <p className="text-on-surface-variant text-sm mt-1">
-                Cari dan pilih semua gejala yang Anda rasakan, lalu atur tingkat keyakinannya.
-              </p>
+          {/* ── LOADING ── */}
+          {loading && (
+            <div style={{ textAlign: 'center', paddingTop: 80 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+              <p style={{ color: '#64748b', fontSize: 16 }}>Memuat data gejala...</p>
             </div>
+          )}
 
-            {/* Submit button — always visible */}
-            <button
-              onClick={handleSubmit}
-              disabled={selectedSymptoms.length === 0 || isSubmitting}
-              className="shrink-0 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <span className="material-symbols-outlined">analytics</span>
-              {isSubmitting ? 'Memproses...' : `Analisis ${selectedSymptoms.length > 0 ? `(${selectedSymptoms.length})` : ''}`}
-            </button>
-          </div>
+          {/* ── ERROR ── */}
+          {!loading && error && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+              <p style={{ color: '#b91c1c', fontWeight: 600, marginBottom: 16 }}>{error}</p>
+              {error.includes('login') && (
+                <Link href="/login" style={{ background: '#ef4444', color: 'white', padding: '10px 24px', borderRadius: 10, fontWeight: 700, textDecoration: 'none' }}>
+                  Login Sekarang
+                </Link>
+              )}
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            {/* ── Left: Symptom Picker ───────────────────────────────────── */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  placeholder="Cari gejala (contoh: demam, batuk, nyeri...)"
-                  className="w-full pl-12 pr-4 py-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none text-on-surface placeholder:text-outline-variant shadow-sm"
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface">
-                    <span className="material-symbols-outlined text-xl">close</span>
-                  </button>
-                )}
+          {/* ════════════════════════════════════════════════════════════════════
+              STEP 1 — PILIH KATEGORI
+          ════════════════════════════════════════════════════════════════════ */}
+          {!loading && !error && step === 1 && (
+            <div>
+              {/* Header */}
+              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eff6ff', color: '#2563eb', borderRadius: 999, padding: '6px 16px', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
+                  🩺 Pemeriksaan Gejala
+                </div>
+                <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', margin: '0 0 8px', lineHeight: 1.3 }}>
+                  Anda merasa tidak enak<br />di bagian mana?
+                </h1>
+                <p style={{ color: '#64748b', fontSize: 15, margin: 0 }}>
+                  Pilih kelompok keluhan yang paling sesuai dengan kondisi Anda sekarang.
+                </p>
               </div>
 
-              {/* Category filter */}
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {categories.map(cat => (
+              {/* Banner jika sudah ada jawaban */}
+              {gejalaTerpilih.length > 0 && (
+                <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 16, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                  <p style={{ margin: 0, color: '#1d4ed8', fontWeight: 600, fontSize: 14 }}>
+                    ✅ {gejalaTerpilih.length} gejala dipilih — siap dianalisis
+                  </p>
                   <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all border ${activeCategory === cat
-                        ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
-                        : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/20 hover:border-primary/30 hover:text-primary'
-                      }`}
+                    onClick={kirimDiagnosis}
+                    disabled={isSubmitting}
+                    style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 10, padding: '8px 20px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
                   >
-                    {cat}
+                    {isSubmitting ? 'Memproses...' : 'Analisis Sekarang →'}
+                  </button>
+                </div>
+              )}
+
+              {/* Grid kategori */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => pilihKategori(cat.id)}
+                    style={{
+                      background: cat.bg,
+                      border: `2px solid ${cat.border}`,
+                      borderRadius: 20,
+                      padding: '20px 16px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      transition: 'transform 0.15s, box-shadow 0.15s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)'; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}
+                  >
+                    <span style={{ fontSize: 36 }}>{cat.icon}</span>
+                    <div>
+                      <p style={{ margin: '0 0 4px', fontWeight: 800, fontSize: 15, color: '#0f172a' }}>{cat.label}</p>
+                      <p style={{ margin: 0, fontSize: 12, color: '#64748b', lineHeight: 1.4 }}>{cat.desc}</p>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <span style={{ color: cat.color, fontSize: 20 }}>→</span>
+                    </div>
                   </button>
                 ))}
               </div>
+            </div>
+          )}
 
-              {/* Symptom List */}
-              {loadingSymptoms ? (
-                <div className="py-20 text-center">
-                  <span className="material-symbols-outlined text-primary text-5xl animate-spin mb-4">sync</span>
-                  <p className="text-on-surface-variant font-medium">Memuat daftar gejala dari server...</p>
+          {/* ════════════════════════════════════════════════════════════════════
+              STEP 2 — DAFTAR GEJALA (100vh layout)
+          ════════════════════════════════════════════════════════════════════ */}
+          {!loading && !error && step === 2 && activeCat && (
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+
+              {/* ── HEADER (sticky, tidak ikut scroll) ── */}
+              <div style={{ padding: '16px 16px 0', flexShrink: 0 }}>
+                {/* Tombol kembali */}
+                <button
+                  onClick={kembali}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontWeight: 600, fontSize: 14, marginBottom: 14, padding: 0 }}
+                >
+                  ← Kembali ke Kategori
+                </button>
+
+                {/* Judul kategori */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+                  <span style={{ fontSize: 36 }}>{activeCat.icon}</span>
+                  <div>
+                    <h2 style={{ margin: 0, fontWeight: 800, fontSize: 20, color: '#0f172a' }}>{activeCat.label}</h2>
+                    <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>Pilih gejala yang Anda rasakan saat ini</p>
+                  </div>
                 </div>
-              ) : fetchError ? (
-                <div className="py-12 text-center bg-red-50 rounded-2xl border border-red-100 p-6">
-                  <span className="material-symbols-outlined text-red-400 text-4xl mb-3">error</span>
-                  <p className="text-red-600 font-semibold mb-4">{fetchError}</p>
-                  {fetchError.includes('login') && (
-                    <Link href="/login" className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:opacity-90 transition">
-                      Masuk Sekarang
-                    </Link>
-                  )}
+
+                {/* Panduan jawaban */}
+                <div style={{ background: '#f1f5f9', borderRadius: 12, padding: '8px 12px', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: '#475569' }}><strong style={{ color: '#16a34a' }}>✅ Ya</strong> — pasti ada</span>
+                    <span style={{ fontSize: 12, color: '#475569' }}><strong style={{ color: '#0ea5e9' }}>🔁 Sering</strong> — sering terjadi</span>
+                    <span style={{ fontSize: 12, color: '#475569' }}><strong style={{ color: '#f59e0b' }}>⏱️ Jarang</strong> — kadang-kadang</span>
+                    <span style={{ fontSize: 12, color: '#475569' }}>😐 <strong>Tidak</strong> = tidak ada</span>
+                  </div>
                 </div>
-              ) : filteredSymptoms.length === 0 ? (
-                <div className="py-12 text-center">
-                  <span className="material-symbols-outlined text-outline text-5xl mb-3">search_off</span>
-                  <p className="text-on-surface-variant font-medium">Tidak ada gejala yang cocok dengan pencarian.</p>
+              </div>
+
+              {/* ── SCROLLABLE SYMPTOM LIST ── */}
+              <div style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '4px 16px 16px',
+                WebkitOverflowScrolling: 'touch' as any,
+              }}>
+
+              {/* Daftar gejala */}
+              {symptoms.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                  <div style={{ fontSize: 40, marginBottom: 8 }}>📭</div>
+                  <p>Tidak ada gejala untuk kategori ini.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {filteredSymptoms.map(symptom => {
-                    const isSelected = selectedCodes.has(symptom.code);
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {symptoms.map((s, i) => {
+                    const ans = answers[s.code];
+                    const isYa     = ans === 1.0;
+                    const isSering = ans === 0.7;
+                    const isJarang = ans === 0.3;
+                    const weight = parseFloat(s.weight ?? '0');
+                    const penting = weight >= 0.9;
+
+                    // Warna kartu berdasarkan jawaban
+                    const cardBg     = isYa ? '#f0fdf4' : isSering ? '#eff6ff' : isJarang ? '#fffbeb' : 'white';
+                    const cardBorder = isYa ? '#86efac' : isSering ? '#93c5fd'  : isJarang ? '#fde68a'  : '#e2e8f0';
+
                     return (
-                      <button
-                        key={symptom.code}
-                        onClick={() => toggleSymptom(symptom)}
-                        className={`text-left p-4 rounded-2xl border transition-all duration-200 active:scale-[0.98] group ${isSelected
-                            ? 'bg-primary/10 border-primary shadow-sm ring-1 ring-primary/50'
-                            : 'bg-surface-container-lowest border-outline-variant/20 hover:border-primary/50 hover:shadow-md'
-                          }`}
+                      <div
+                        key={s.code}
+                        style={{
+                          background: cardBg,
+                          border: `2px solid ${cardBorder}`,
+                          borderRadius: 16,
+                          padding: '14px 16px',
+                          transition: 'border-color 0.2s, background 0.2s',
+                        }}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${isSelected ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant group-hover:bg-primary/10 group-hover:text-primary'
-                            }`}>
-                            {isSelected
-                              ? <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                              : <span className="material-symbols-outlined text-xl">{getCategoryIcon(symptom.category)}</span>
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`font-bold text-sm leading-tight ${isSelected ? 'text-primary' : 'text-on-surface'}`}>
-                                {symptom.name}
-                              </span>
-                              <span className="text-[10px] font-mono text-outline bg-surface-container px-1.5 py-0.5 rounded">
-                                {symptom.code}
-                              </span>
-                            </div>
-                            <span className="text-xs text-on-surface-variant mt-0.5 block">{symptom.category}</span>
+                        {/* Pertanyaan */}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+                          <span style={{
+                            minWidth: 24, height: 24, borderRadius: '50%',
+                            background: '#f1f5f9', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 11, fontWeight: 700, marginTop: 1, flexShrink: 0
+                          }}>
+                            {i + 1}
+                          </span>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ margin: 0, fontWeight: 600, fontSize: 15, color: '#0f172a', lineHeight: 1.4 }}>
+                              {buatPertanyaan(s.name)}
+                            </p>
+                            {s.description && (
+                              <p style={{ margin: '4px 0 0', fontSize: 12, color: '#94a3b8', lineHeight: 1.4 }}>
+                                {penting && <span style={{ color: '#ef4444' }}>⚠️ </span>}
+                                {s.description}
+                              </p>
+                            )}
                           </div>
                         </div>
-                      </button>
+
+                        {/* 4 tombol frekuensi */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                          {/* Ya */}
+                          <button
+                            onClick={() => jawab(s.code, 1.0)}
+                            style={{
+                              padding: '8px 4px',
+                              border: `2px solid ${isYa ? '#16a34a' : '#e2e8f0'}`,
+                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                              background: isYa ? '#16a34a' : 'white',
+                              color: isYa ? 'white' : '#64748b',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            ✅<br />Ya
+                          </button>
+
+                          {/* Sering */}
+                          <button
+                            onClick={() => jawab(s.code, 0.7)}
+                            style={{
+                              padding: '8px 4px',
+                              border: `2px solid ${isSering ? '#0ea5e9' : '#e2e8f0'}`,
+                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                              background: isSering ? '#0ea5e9' : 'white',
+                              color: isSering ? 'white' : '#64748b',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            🔁<br />Sering
+                          </button>
+
+                          {/* Jarang */}
+                          <button
+                            onClick={() => jawab(s.code, 0.3)}
+                            style={{
+                              padding: '8px 4px',
+                              border: `2px solid ${isJarang ? '#f59e0b' : '#e2e8f0'}`,
+                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                              background: isJarang ? '#f59e0b' : 'white',
+                              color: isJarang ? 'white' : '#64748b',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            ⏱️<br />Jarang
+                          </button>
+
+                          {/* Tidak */}
+                          <button
+                            onClick={() => setAnswers(prev => ({ ...prev, [s.code]: null }))}
+                            style={{
+                              padding: '8px 4px',
+                              border: `2px solid ${!ans ? '#94a3b8' : '#e2e8f0'}`,
+                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                              background: !ans ? '#f1f5f9' : 'white',
+                              color: !ans ? '#475569' : '#cbd5e1',
+                              transition: 'all 0.15s',
+                            }}
+                          >
+                            😐<br />Tidak
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               )}
+              </div>{/* end scroll wrapper */}
 
-              {/* Count info */}
-              {!loadingSymptoms && !fetchError && (
-                <p className="text-xs text-outline text-center pt-2">
-                  Menampilkan {filteredSymptoms.length} dari {allSymptoms.length} gejala
-                </p>
-              )}
-            </div>
-
-            {/* ── Right: Selected Symptoms Panel ────────────────────────── */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-28 space-y-4">
-                <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/15 shadow-sm overflow-hidden">
-                  {/* Panel header */}
-                  <div className="p-5 border-b border-outline-variant/10 bg-surface-container-low/50">
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-headline font-bold text-on-surface flex items-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-xl">checklist</span>
-                        Gejala Dipilih
-                      </h2>
-                      {selectedSymptoms.length > 0 && (
-                        <span className="px-2.5 py-1 bg-primary text-white text-xs font-black rounded-full">
-                          {selectedSymptoms.length}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Selected list */}
-                  <div className="max-h-[500px] overflow-y-auto divide-y divide-outline-variant/10">
-                    {selectedSymptoms.length === 0 ? (
-                      <div className="py-12 px-6 text-center">
-                        <span className="material-symbols-outlined text-outline text-4xl mb-3">add_circle</span>
-                        <p className="text-sm text-on-surface-variant font-medium">
-                          Belum ada gejala yang dipilih. Klik gejala di sebelah kiri untuk menambahkan.
-                        </p>
-                      </div>
-                    ) : (
-                      selectedSymptoms.map(s => (
-                        <div key={s.code} className="p-4 space-y-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <p className="font-bold text-sm text-on-surface leading-tight">{s.name}</p>
-                              <p className="text-xs text-outline font-mono">{s.code}</p>
-                            </div>
-                            <button
-                              onClick={() => removeSymptom(s.code)}
-                              className="text-outline hover:text-error transition-colors shrink-0 mt-0.5"
-                            >
-                              <span className="material-symbols-outlined text-xl">close</span>
-                            </button>
-                          </div>
-                          {/* CF Level Selector — Dropdown */}
-                          <div className="mt-2">
-                            <select
-                              value={s.cfValue}
-                              onChange={(e) => updateCF(s.code, parseFloat(e.target.value))}
-                              className="w-full bg-surface-container-lowest border border-outline-variant/30 text-xs font-semibold rounded-lg px-2.5 py-2 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-on-surface transition-all cursor-pointer hover:border-primary/40 appearance-none"
-                            >
-                              {CF_LEVELS.map(level => (
-                                <option key={level.key} value={level.value}>
-                                  Keyakinan: {level.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Footer action */}
-                  {selectedSymptoms.length > 0 && (
-                    <div className="p-4 border-t border-outline-variant/10 bg-surface-container-low/30">
-                      <button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                        className="w-full py-3.5 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
-                      >
-                        {isSubmitting ? 'Memproses...' : 'Analisis Sekarang →'}
-                      </button>
-                      <button
-                        onClick={() => setSelectedSymptoms([])}
-                        className="w-full mt-2 py-2 text-xs text-on-surface-variant hover:text-error transition-colors font-semibold"
-                      >
-                        Reset Pilihan
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-
+              {/* ── STICKY BOTTOM BUTTONS ── */}
+              <div style={{
+                flexShrink: 0,
+                padding: '12px 16px',
+                borderTop: '1px solid #e2e8f0',
+                background: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}>
+                {gejalaTerpilih.length > 0 && (
+                  <button
+                    onClick={kirimDiagnosis}
+                    disabled={isSubmitting}
+                    style={{
+                      width: '100%', padding: '15px', background: '#2563eb', color: 'white',
+                      border: 'none', borderRadius: 14, fontWeight: 800, fontSize: 16,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1,
+                    }}
+                  >
+                    {isSubmitting ? '⏳ Memproses...' : `🔍 Analisis ${gejalaTerpilih.length} Gejala Sekarang`}
+                  </button>
+                )}
+                <button
+                  onClick={kembali}
+                  style={{
+                    width: '100%', padding: '12px', background: 'white', color: '#64748b',
+                    border: '2px solid #e2e8f0', borderRadius: 14, fontWeight: 600, fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Pilih Kategori Lain
+                </button>
               </div>
-            </div>
 
-          </div>
+            </div>
+          )}
+
         </div>
       </main>
 
-      {/* Floating submit button on mobile */}
-      {selectedSymptoms.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-outline-variant/10 lg:hidden z-40">
+      {/* Floating bar — muncul kalau ada jawaban, di step 1 */}
+      {!loading && step === 1 && gejalaTerpilih.length > 0 && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          background: 'white', borderTop: '1px solid #e2e8f0',
+          padding: '14px 20px', zIndex: 50, display: 'flex',
+          alignItems: 'center', justifyContent: 'space-between',
+          gap: 12,
+        }}>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+              {gejalaTerpilih.length} gejala dipilih
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>Tambah kategori lain atau langsung analisis</p>
+          </div>
           <button
-            onClick={handleSubmit}
+            onClick={kirimDiagnosis}
             disabled={isSubmitting}
-            className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-lg rounded-xl shadow-xl shadow-primary/30 active:scale-95 transition-all disabled:opacity-60"
+            style={{
+              background: '#2563eb', color: 'white', border: 'none',
+              borderRadius: 12, padding: '11px 22px', fontWeight: 800,
+              fontSize: 14, cursor: 'pointer',
+            }}
           >
-            {isSubmitting ? 'Memproses...' : `Analisis ${selectedSymptoms.length} Gejala →`}
+            🔍 Analisis
           </button>
         </div>
       )}

@@ -106,7 +106,7 @@ export default function Home() {
             <div className="absolute top-[40%] left-[20%] w-[300px] h-[300px] rounded-full bg-secondary-container/20 blur-[60px]"></div>
           </div>
 
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10 py-12 md:py-20">
+          <div className="max-w-[1440px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative z-10 py-12 md:py-20">
             
             {/* Left Box: Copywriting */}
             <div className={`space-y-8 transition-all duration-1000 ease-out transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
@@ -227,7 +227,7 @@ export default function Home() {
 
         {/* BENTO GRID FEATURES SECTION */}
         <section className="py-20 md:py-32 bg-surface relative z-10">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-[1440px] mx-auto px-6">
             <div className="text-center mb-16 md:mb-20 space-y-5">
               <span className="text-primary font-bold tracking-widest uppercase text-sm">Keunggulan Website kami </span>
               <h2 className="text-3xl md:text-5xl font-black font-headline tracking-tighter text-on-surface">Dirancang melampaui Aplikasi Biasa.</h2>
@@ -299,7 +299,7 @@ export default function Home() {
 
         {/* TESTIMONIAL SECTION */}
         <section className="py-24 bg-surface-container-lowest">
-           <div className="max-w-7xl mx-auto px-6">
+           <div className="max-w-[1440px] mx-auto px-6">
                <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-6">
                  <div className="text-center md:text-left space-y-4">
                     <h2 className="text-4xl font-black font-headline tracking-tighter text-on-surface">Apa Kata Mereka?</h2>
@@ -422,7 +422,7 @@ export default function Home() {
 
         {/* CTA SECTION (Revamped) */}
         <section className="py-24 bg-surface relative overflow-hidden">
-          <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="max-w-[1440px] mx-auto px-6 relative z-10">
             <div className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-slate-900 to-slate-800 py-24 px-8 text-center text-white shadow-2xl border border-white/10 group">
               {/* Animated BG blobs within CTA */}
               <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-[120px] opacity-30 group-hover:opacity-50 transition-opacity duration-1000 translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>

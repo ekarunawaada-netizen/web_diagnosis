@@ -8,7 +8,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import apiClient, { setAccessToken, getAccessToken } from "@/lib/axios";
+import apiClient, { setAccessToken } from "@/lib/axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -37,23 +37,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const didInitRef = useRef(false);
 
   /**
-   * Try to silently restore session on mount using the httpOnly refresh-token
-   * cookie (set by the backend on login). If the cookie is valid a new
-   * access-token is returned and we fetch the current user profile.
+   * Restore session on mount.
+   *
+   * Urutan:
+   *   1. GET /api/auth/me  — jika cookie masih valid, server kembalikan user + token
+   *   2. POST /api/auth/refresh — fallback jika /me gagal (token expired)
+   *   3. Keduanya gagal → user belum login
    */
   const tryRestoreSession = useCallback(async () => {
     try {
-      const { data } = await apiClient.post("/api/auth/refresh");
-      setAccessToken(data.accessToken);
-
-      // Fetch full user profile
+      // Step 1: coba /me dulu
       const meRes = await apiClient.get("/api/auth/me");
-      const fetchedUser = meRes.data.user ?? meRes.data.data ?? meRes.data;
+      const tokenFromMe: string | null =
+        meRes.data?.accessToken ?? meRes.data?.data?.accessToken ?? null;
+
+      if (tokenFromMe) setAccessToken(tokenFromMe);
+
+      const fetchedUser =
+        meRes.data?.user ?? meRes.data?.data?.user ?? meRes.data?.data ?? null;
       setUser(fetchedUser);
+
     } catch {
-      // Cookie is absent or expired — user is not authenticated
-      setAccessToken(null);
-      setUser(null);
+      // /me gagal → coba /refresh
+      try {
+        const refreshRes = await apiClient.post("/api/auth/refresh");
+        const newToken: string | null =
+          refreshRes.data?.accessToken ?? refreshRes.data?.data?.accessToken ?? null;
+
+        if (newToken) setAccessToken(newToken);
+
+        const meRes = await apiClient.get("/api/auth/me");
+        const fetchedUser =
+          meRes.data?.user ?? meRes.data?.data?.user ?? meRes.data?.data ?? null;
+        setUser(fetchedUser);
+
+      } catch {
+        // Keduanya gagal — tidak ada sesi aktif
+        setAccessToken(null);
+        setUser(null);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,6 +87,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     tryRestoreSession();
   }, [tryRestoreSession]);
 
+  // ─── Dengarkan event global 'auth:expired' dari axios interceptor ─────────────
+  useEffect(() => {
+    const handleExpired = () => {
+      setAccessToken(null);
+      setUser(null);
+    };
+    window.addEventListener("auth:expired", handleExpired);
+    return () => window.removeEventListener("auth:expired", handleExpired);
+  }, []);
+
   // ─── login ──────────────────────────────────────────────────────────────────
 
   const login = useCallback(
@@ -74,8 +106,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
         rememberMe,
       });
-
-      // Backend returns { accessToken, user: { id, username, permId } }
       setAccessToken(data.accessToken);
       setUser(data.user);
     },
@@ -88,14 +118,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await apiClient.post("/api/auth/logout");
     } catch {
-      // Always clear client-side state even if the server call fails
+      // Tetap clear state meski server call gagal
     } finally {
       setAccessToken(null);
       setUser(null);
     }
   }, []);
-
-  // ─── Context value ───────────────────────────────────────────────────────────
 
   return (
     <AuthContext.Provider value={{ user, isLoading, login, logout }}>

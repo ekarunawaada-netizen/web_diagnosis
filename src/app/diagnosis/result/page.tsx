@@ -51,10 +51,21 @@ export default function ResultPage() {
     const fetchDiagnosis = async () => {
       if (!data) return;
 
-      // The new format already has { symptomCode, cfValue } — pass directly
+      /**
+       * LOGIKA DIAGNOSIS AKURAT
+       * ─────────────────────────────────────────────────────────────────────
+       * 1. Kirim semua symptomCode + cfValue (Ya=1.0 / Mungkin=0.5)
+       * 2. minCF=0.05 → backend mengembalikan semua penyakit yang relevan
+       *    meski CF-nya kecil (tidak hanya yang >50%)
+       * 3. onlyActiveRules=true → hanya aturan aktif di database
+       * 4. Backend melakukan CF combination:
+       *    CF_final = CF_pakar × CF_user
+       *    CF_combined = CF_prev + CF_new × (1 - CF_prev)
+       * ─────────────────────────────────────────────────────────────────────
+       */
       const symptomsPayload = data.symptoms.map((s: StoredSymptom) => ({
         symptomCode: s.symptomCode,
-        cfValue: s.cfValue,
+        cfValue: s.cfValue,   // 1.0 = Ya, 0.5 = Mungkin
       }));
 
       if (symptomsPayload.length === 0) {
@@ -69,12 +80,19 @@ export default function ResultPage() {
 
         const response = await apiClient.post('/api/diagnose/start', {
           symptoms: symptomsPayload,
-          options: { onlyActiveRules: true, minCF: 0 },
+          options: {
+            onlyActiveRules: true,
+            minCF: 0.05,          // tampilkan hasil mulai dari CF 5% keatas
+          },
         });
 
-        // Response shape: { success, data: { timestamp, userSymptoms, results[] } }
+        // Response: { success, data: { timestamp, userSymptoms, results[] } }
         if (response.data?.success && Array.isArray(response.data.data?.results)) {
-          setResults(response.data.data.results);
+          // Urutkan: CF tertinggi di atas
+          const sorted = [...response.data.data.results].sort(
+            (a: DiagnoseResult, b: DiagnoseResult) => b.cfValue - a.cfValue
+          );
+          setResults(sorted);
         } else {
           setError('Format respons dari server tidak sesuai.');
         }
@@ -161,43 +179,58 @@ export default function ResultPage() {
       pdfContainer.style.top = '0px';
       
       pdfContainer.innerHTML = `
-        <div style="font-family: sans-serif; color: #1e293b;">
-          <h1 style="color: #2563eb; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px;">Laporan Diagnosis Petit Hospital</h1>
-          <p style="font-size: 14px; color: #64748b;">Tanggal: ${new Date(data?.timestamp || Date.now()).toLocaleString('id-ID')}</p>
+        <div style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.5; box-sizing: border-box;">
           
-          <div style="margin-top: 30px;">
-            <h2 style="font-size: 18px; color: #0f172a;">Ringkasan Gejala:</h2>
-            <ul style="list-style: none; padding: 0;">
+          <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;">
+            <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Laporan Diagnosis Petit Hospital</h1>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <p style="font-size: 14px; color: #64748b; margin: 0;">Tanggal: ${new Date(data?.timestamp || Date.now()).toLocaleString('id-ID')}</p>
+          </div>
+          
+          <div style="margin-bottom: 30px; display: block;">
+            <h2 style="font-size: 18px; color: #0f172a; margin: 0 0 15px 0; padding: 0;">Ringkasan Gejala:</h2>
+            <div style="display: block;">
               ${(data?.symptoms || []).map(s => `
-                <li style="background: #f8fafc; margin-bottom: 10px; padding: 15px; border-radius: 12px; border-left: 4px solid #3b82f6;">
-                  <strong>${s.name}</strong>
-                </li>
+                <div style="background: #f8fafc; margin-bottom: 12px; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; display: block;">
+                  <strong style="margin: 0; font-size: 15px; display: block;">${s.name}</strong>
+                </div>
               `).join('')}
-            </ul>
+            </div>
           </div>
 
-          <div style="margin-top: 30px; background: #eff6ff; padding: 25px; border-radius: 20px;">
-            <h2 style="font-size: 18px; color: #1e40af; margin-top: 0;">Hasil Diagnosis:</h2>
-            <p style="font-size: 20px; font-weight: bold; margin: 10px 0;">${topMatch.name}</p>
-            <p style="font-size: 14px; color: #1e40af; margin-bottom: 5px;">Penyebab: ${topMatch.cause}</p>
-            <p style="font-size: 16px; color: #1e40af; font-weight: bold;">Tingkat Kepercayaan: ${topMatch.probability}%</p>
+          <div style="margin-bottom: 30px; background: #eff6ff; padding: 25px; border-radius: 12px; display: block;">
+            <h2 style="font-size: 18px; color: #1e40af; margin: 0 0 15px 0;">Hasil Diagnosis:</h2>
+            <div style="margin-bottom: 10px; display: block;">
+              <span style="font-size: 24px; font-weight: bold; color: #1e293b; display: block;">${topMatch.name}</span>
+            </div>
+            <div style="margin-bottom: 10px; display: block;">
+              <span style="font-size: 14px; color: #3b82f6; display: block;">Penyebab: ${topMatch.cause}</span>
+            </div>
+            <div style="display: block;">
+              <span style="font-size: 16px; color: #1e40af; font-weight: bold; display: block;">Tingkat Kepercayaan: ${topMatch.probability}%</span>
+            </div>
           </div>
 
-          <div style="margin-top: 20px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
-            <h3 style="font-size: 16px; color: #0f172a; margin-top: 0;">Penanganan:</h3>
-            <p style="font-size: 14px; color: #475569;">${topMatch.treatment}</p>
+          <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; display: block;">
+            <h3 style="font-size: 18px; color: #0f172a; margin: 0 0 10px 0;">Penanganan:</h3>
+            <p style="font-size: 14px; color: #475569; margin: 0; display: block;">${topMatch.treatment}</p>
           </div>
 
-          <div style="margin-top: 20px;">
-            <h2 style="font-size: 18px; color: #0f172a;">Saran Dokter Spesialis:</h2>
-            <p style="font-size: 16px; background: #f0fdf4; padding: 15px; border-radius: 12px; color: #166534; font-weight: bold;">
-              Segera konsultasikan hasil ini dengan Dokter Umum atau Spesialis terkait.
-            </p>
+          <div style="margin-bottom: 30px; display: block;">
+            <h2 style="font-size: 18px; color: #0f172a; margin: 0 0 15px 0;">Saran Dokter Spesialis:</h2>
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 12px; display: block;">
+              <p style="font-size: 16px; color: #166534; font-weight: bold; margin: 0; display: block;">
+                Segera konsultasikan hasil ini dengan Dokter Umum atau Spesialis terkait.
+              </p>
+            </div>
           </div>
 
-          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; text-align: center;">
-            <p>Laporan ini dihasilkan secara otomatis oleh Petit Hospital. Bukan merupakan pengganti saran medis profesional.</p>
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; display: block;">
+            <p style="font-size: 11px; color: #94a3b8; margin: 0; display: block;">Laporan ini dihasilkan secara otomatis oleh Petit Hospital. Bukan merupakan pengganti saran medis profesional.</p>
           </div>
+          
         </div>
       `;
       document.body.appendChild(pdfContainer);
@@ -246,49 +279,8 @@ export default function ResultPage() {
   return (
     <>
       <Navbar />
-      {/* Side Navigation (Desktop) */}
-      <aside className="h-screen w-64 fixed left-0 top-0 hidden lg:flex flex-col bg-slate-50 border-r border-slate-200/50 p-4 pt-24 gap-y-4 z-40">
-        <div className="flex items-center gap-3 px-2 mb-6">
-          <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
-            <span className="material-symbols-outlined">person</span>
-          </div>
-          <div>
-            <p className="text-sm font-black text-slate-900">Dr. Aris Setiawan</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest">Spesialis Umum</p>
-          </div>
-        </div>
-        <nav className="flex flex-col gap-1">
-          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2 hover:translate-x-1 transition-transform" href="#">
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-sm">Dashboard</span>
-          </Link>
-          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2 hover:translate-x-1 transition-transform" href="#">
-            <span className="material-symbols-outlined">history</span>
-            <span className="text-sm">Riwayat</span>
-          </Link>
-          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2 hover:translate-x-1 transition-transform" href="/diagnosis">
-            <span className="material-symbols-outlined">stethoscope</span>
-            <span className="text-sm">Gejala</span>
-          </Link>
-          <Link className="flex items-center gap-3 p-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 mx-2 active:scale-[0.98] duration-150" href="/diagnosis/result">
-            <span className="material-symbols-outlined">analytics</span>
-            <span className="text-sm font-medium">Analisis</span>
-          </Link>
-        </nav>
-        <div className="mt-auto flex flex-col gap-1">
-          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2" href="#">
-            <span className="material-symbols-outlined">settings</span>
-            <span className="text-sm">Settings</span>
-          </Link>
-          <Link className="flex items-center gap-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl mx-2" href="#">
-            <span className="material-symbols-outlined">logout</span>
-            <span className="text-sm">Logout</span>
-          </Link>
-        </div>
-      </aside>
-
       {/* Main Content */}
-      <main className="lg:ml-64 pt-24 pb-12 px-6 min-h-screen">
+      <main className="pt-24 pb-12 px-6 min-h-screen">
         <div ref={contentRef} className="max-w-6xl mx-auto space-y-8">
           {/* Hero Results */}
           <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary-container p-8 md:p-12 text-white shadow-xl">

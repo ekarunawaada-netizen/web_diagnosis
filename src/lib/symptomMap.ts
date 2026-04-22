@@ -4,7 +4,10 @@
  * symptomMap.ts
  *
  * Static mapping from frontend question IDs (used in the diagnosis quiz)
- * to backend symptom codes used by the inference engine API (/api/diagnose).
+ * to backend symptom codes used by the inference engine API (/
+ * 
+ * 
+ * diagnose).
  *
  * Backend codes were sourced from GET /api/symptoms.
  * CF values represent user confidence level:
