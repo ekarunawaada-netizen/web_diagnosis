@@ -374,7 +374,6 @@ export default function ResultPage() {
                           <div className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`}></div>
                           <div>
                             <p className="font-bold text-sm text-on-surface">{s.name}</p>
-                            <p className="text-[10px] text-outline font-mono">{s.symptomCode} · {cfLabel}</p>
                           </div>
                         </div>
                       );
@@ -410,26 +409,6 @@ export default function ResultPage() {
 
               {/* Right Sidebar */}
               <div className="space-y-6">
-                {/* Confidence Indicators */}
-                <div className="bg-surface-container-lowest p-6 rounded-3xl shadow-sm border border-outline-variant/10">
-                  <h3 className="font-bold mb-4 font-headline">Kemungkinan Lain</h3>
-                  <div className="space-y-4">
-                    {otherResults.map((item: { name: string; probability: number }) => (
-                      <div key={item.name}>
-                        <div className="flex justify-between text-xs font-bold mb-1">
-                          <span>{item.name}</span>
-                          <span>{item.probability}%</span>
-                        </div>
-                        <div className="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
-                          <div className="bg-primary h-full" style={{ width: `${item.probability}%` }}></div>
-                        </div>
-                      </div>
-                    ))}
-                    {otherResults.length === 0 && (
-                      <p className="text-xs text-slate-400 italic">Tidak ada kemungkinan lain yang signifikan.</p>
-                    )}
-                  </div>
-                </div>
 
                 {/* CTA Card */}
                 <div className="bg-white p-6 rounded-3xl shadow-xl shadow-blue-100 border border-blue-50">

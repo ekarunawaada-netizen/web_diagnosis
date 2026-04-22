@@ -13,7 +13,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,   // send httpOnly cookies (refresh token) on every request
+  withCredentials: false,   // send httpOnly cookies (refresh token) on every request
   timeout: 60000,
 });
 

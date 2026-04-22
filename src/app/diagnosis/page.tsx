@@ -186,24 +186,8 @@ export default function DiagnosisPage() {
   return (
     <>
       <Navbar />
-      <main style={{
-        paddingTop: 64,
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#f8fafc',
-        overflow: step === 2 ? 'hidden' : 'auto',
-      }}>
-        <div style={{
-          maxWidth: 680,
-          width: '100%',
-          margin: '0 auto',
-          padding: step === 2 ? '0' : '24px 16px',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}>
+      <main className={`pt-16 min-h-screen flex flex-col bg-slate-50 ${step === 2 ? 'overflow-hidden' : 'overflow-auto'}`}>
+        <div className={`max-w-[680px] w-full mx-auto flex flex-col overflow-hidden flex-1 ${step === 2 ? 'p-0' : 'py-6 px-4 md:py-10'}`}>
 
           {/* ── LOADING ── */}
           {loading && (
@@ -231,15 +215,14 @@ export default function DiagnosisPage() {
           ════════════════════════════════════════════════════════════════════ */}
           {!loading && !error && step === 1 && (
             <div>
-              {/* Header */}
-              <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#eff6ff', color: '#2563eb', borderRadius: 999, padding: '6px 16px', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>
+              <div className="text-center mb-10 px-4">
+                <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 rounded-full px-4 py-1.5 text-[11px] md:text-sm font-bold mb-5 border border-blue-100 uppercase tracking-widest">
                   🩺 Pemeriksaan Gejala
                 </div>
-                <h1 style={{ fontSize: 28, fontWeight: 800, color: '#0f172a', margin: '0 0 8px', lineHeight: 1.3 }}>
-                  Anda merasa tidak enak<br />di bagian mana?
+                <h1 className="text-2xl md:text-4xl font-black font-headline text-slate-800 mb-3 leading-tight tracking-tight">
+                  Anda merasa tidak enak<br className="hidden sm:block" /> di bagian mana?
                 </h1>
-                <p style={{ color: '#64748b', fontSize: 15, margin: 0 }}>
+                <p className="text-slate-500 text-sm md:text-base max-w-md mx-auto font-medium">
                   Pilih kelompok keluhan yang paling sesuai dengan kondisi Anda sekarang.
                 </p>
               </div>
@@ -261,7 +244,7 @@ export default function DiagnosisPage() {
               )}
 
               {/* Grid kategori */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2 sm:px-0">
                 {CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
@@ -312,21 +295,21 @@ export default function DiagnosisPage() {
                 </button>
 
                 {/* Judul kategori */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
-                  <span style={{ fontSize: 36 }}>{activeCat.icon}</span>
+                <div className="flex items-center gap-4 mb-5 p-2 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                  <span className="text-4xl md:text-5xl">{activeCat.icon}</span>
                   <div>
-                    <h2 style={{ margin: 0, fontWeight: 800, fontSize: 20, color: '#0f172a' }}>{activeCat.label}</h2>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: 13 }}>Pilih gejala yang Anda rasakan saat ini</p>
+                    <h2 className="font-black font-headline text-lg md:text-xl text-slate-800 leading-tight">{activeCat.label}</h2>
+                    <p className="text-slate-500 text-[11px] md:text-xs font-medium">Pilih gejala yang Anda rasakan saat ini</p>
                   </div>
                 </div>
 
                 {/* Panduan jawaban */}
-                <div style={{ background: '#f1f5f9', borderRadius: 12, padding: '8px 12px', marginBottom: 12 }}>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 12, color: '#475569' }}><strong style={{ color: '#16a34a' }}>✅ Ya</strong> — pasti ada</span>
-                    <span style={{ fontSize: 12, color: '#475569' }}><strong style={{ color: '#0ea5e9' }}>🔁 Sering</strong> — sering terjadi</span>
-                    <span style={{ fontSize: 12, color: '#475569' }}><strong style={{ color: '#f59e0b' }}>⏱️ Jarang</strong> — kadang-kadang</span>
-                    <span style={{ fontSize: 12, color: '#475569' }}>😐 <strong>Tidak</strong> = tidak ada</span>
+                <div className="bg-slate-100/80 backdrop-blur rounded-xl p-3 mb-4 border border-slate-200/50">
+                  <div className="flex items-center justify-center gap-x-4 gap-y-2 flex-wrap">
+                    <span className="text-[10px] md:text-xs font-bold text-slate-600"><span className="text-green-600">Ya</span></span>
+                    <span className="text-[10px] md:text-xs font-bold text-slate-600"><span className="text-blue-600">Sering</span></span>
+                    <span className="text-[10px] md:text-xs font-bold text-slate-600"><span className="text-amber-600">Jarang</span></span>
+                    <span className="text-[10px] md:text-xs font-bold text-slate-600">Tidak</span>
                   </div>
                 </div>
               </div>
@@ -394,65 +377,49 @@ export default function DiagnosisPage() {
                         </div>
 
                         {/* 4 tombol frekuensi */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
+                        <div className="grid grid-cols-2 xs:grid-cols-4 gap-3">
                           {/* Ya */}
                           <button
                             onClick={() => jawab(s.code, 1.0)}
-                            style={{
-                              padding: '8px 4px',
-                              border: `2px solid ${isYa ? '#16a34a' : '#e2e8f0'}`,
-                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                              background: isYa ? '#16a34a' : 'white',
-                              color: isYa ? 'white' : '#64748b',
-                              transition: 'all 0.15s',
-                            }}
+                            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 font-bold text-xs transition-all active:scale-95 ${
+                              isYa ? 'bg-green-600 border-green-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 hover:border-green-200'
+                            }`}
                           >
-                            ✅<br />Ya
+                            <span className="mb-0.5 text-base">✅</span>
+                            Ya
                           </button>
 
                           {/* Sering */}
                           <button
                             onClick={() => jawab(s.code, 0.7)}
-                            style={{
-                              padding: '8px 4px',
-                              border: `2px solid ${isSering ? '#0ea5e9' : '#e2e8f0'}`,
-                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                              background: isSering ? '#0ea5e9' : 'white',
-                              color: isSering ? 'white' : '#64748b',
-                              transition: 'all 0.15s',
-                            }}
+                            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 font-bold text-xs transition-all active:scale-95 ${
+                              isSering ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 hover:border-blue-200'
+                            }`}
                           >
-                            🔁<br />Sering
+                            <span className="mb-0.5 text-base">🔁</span>
+                            Sering
                           </button>
 
                           {/* Jarang */}
                           <button
                             onClick={() => jawab(s.code, 0.3)}
-                            style={{
-                              padding: '8px 4px',
-                              border: `2px solid ${isJarang ? '#f59e0b' : '#e2e8f0'}`,
-                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                              background: isJarang ? '#f59e0b' : 'white',
-                              color: isJarang ? 'white' : '#64748b',
-                              transition: 'all 0.15s',
-                            }}
+                            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 font-bold text-xs transition-all active:scale-95 ${
+                              isJarang ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 hover:border-amber-200'
+                            }`}
                           >
-                            ⏱️<br />Jarang
+                            <span className="mb-0.5 text-base">⏱️</span>
+                            Jarang
                           </button>
 
                           {/* Tidak */}
                           <button
                             onClick={() => setAnswers(prev => ({ ...prev, [s.code]: null }))}
-                            style={{
-                              padding: '8px 4px',
-                              border: `2px solid ${!ans ? '#94a3b8' : '#e2e8f0'}`,
-                              borderRadius: 10, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                              background: !ans ? '#f1f5f9' : 'white',
-                              color: !ans ? '#475569' : '#cbd5e1',
-                              transition: 'all 0.15s',
-                            }}
+                            className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 font-bold text-xs transition-all active:scale-95 ${
+                              !ans ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-white border-slate-100 text-slate-300 hover:border-slate-200'
+                            }`}
                           >
-                            😐<br />Tidak
+                            <span className="mb-0.5 text-base">😐</span>
+                            Tidak
                           </button>
                         </div>
                       </div>

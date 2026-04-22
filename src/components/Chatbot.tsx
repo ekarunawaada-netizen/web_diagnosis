@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import ChatWindow from './ChatWindow';
 
@@ -8,9 +8,26 @@ export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const [isHiddenByFooter, setIsHiddenByFooter] = useState(false);
 
-  // Jangan tampilkan tombol floating jika sudah di halaman chat fullscreen
-  if (pathname === '/chat') return null;
+  useEffect(() => {
+    const footer = document.getElementById('main-footer');
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHiddenByFooter(entry.isIntersecting);
+      },
+      { threshold: 0.1 } // Sembunyikan jika 10% footer terlihat
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+
+  // Jangan tampilkan tombol floating jika di halaman chat fullscreen atau halaman legal/bantuan
+  const hiddenPaths = ['/chat', '/privacy', '/terms', '/help'];
+  if (hiddenPaths.includes(pathname)) return null;
 
   const handleFullscreen = () => {
     setIsOpen(false);
@@ -18,7 +35,9 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-4 md:right-6 z-[60] flex flex-col items-end">
+    <div className={`fixed bottom-6 right-4 md:right-6 z-[60] flex flex-col items-end transition-all duration-500 ease-in-out ${
+      isHiddenByFooter ? 'opacity-0 translate-y-20 pointer-events-none' : 'opacity-100 translate-y-0'
+    }`}>
       {/* Chat Window */}
       {isOpen && (
         <div className="mb-4 w-[calc(100vw-2rem)] sm:w-[350px] md:w-[400px] h-[min(550px,75vh)] rounded-[2rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 fade-in duration-300">
