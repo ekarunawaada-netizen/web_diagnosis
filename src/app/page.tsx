@@ -46,6 +46,8 @@ export default function Home() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({ text: '', rating: 5 });
   const [showAll, setShowAll] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ text: '', rating: 5 });
   const { user } = useAuth();
 
   useEffect(() => {
@@ -57,17 +59,18 @@ export default function Home() {
       try {
         const res = await apiClient.get('/api/testimonials/all');
         const data = res.data;
-        if (Array.isArray(data) && data.length > 0) {
-          const formatted = data.map(t => ({
+        if (Array.isArray(data)) {
+          const formatted = data.map((t: any) => ({
             id: t.id,
-            name: t.name,
+            name: t.username || t.name || 'Anonymous',
             role: t.role || 'Pengguna Petit Klinik',
-            rating: t.rating || 5,
-            text: `"${t.text}"`,
-            avatar: t.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(t.name)}`,
+            rating: typeof t.rating === 'string' ? parseFloat(t.rating) : (t.rating || 5),
+            text: t.text ? (t.text.startsWith('"') ? t.text : `"${t.text}"`) : `"Sangat puas dengan pelayanan yang diberikan. Membantu dan akurat!"`,
+            avatar: t.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(t.username || t.name || 'Anonymous')}`,
             isPrimary: false
           }));
-          setTestimonials(prev => [...prev, ...formatted]);
+          
+          setTestimonials([...initialTestimonials, ...formatted.filter((f: any) => !initialTestimonials.find(i => i.id === f.id))]);
         }
       } catch (e) {
         console.error('Gagal mengambil data testimoni dari server', e);
@@ -90,7 +93,7 @@ export default function Home() {
     if (!user || !newTestimonial.text) return;
 
     const payload = {
-      name: user.username,
+      username: user.username,
       role: "Pengguna Petit Klinik",
       rating: newTestimonial.rating,
       text: newTestimonial.text,
@@ -103,11 +106,11 @@ export default function Home() {
       
       const formattedAdded = {
         id: added.id || Date.now(),
-        name: added.name,
+        name: added.username || added.name || user.username,
         role: added.role || "Pengguna Petit Klinik",
-        rating: added.rating || 5,
-        text: `"${added.text}"`,
-        avatar: added.avatar,
+        rating: typeof added.rating === 'string' ? parseFloat(added.rating) : (added.rating || newTestimonial.rating),
+        text: added.text ? (added.text.startsWith('"') ? added.text : `"${added.text}"`) : `"${newTestimonial.text}"`,
+        avatar: added.avatar || payload.avatar,
         isPrimary: false
       };
 
@@ -117,6 +120,45 @@ export default function Home() {
     } catch (error) {
       console.error('Gagal mengirim testimoni:', error);
       alert('Terjadi kesalahan saat mengirim ulasan Anda. Coba lagi nanti.');
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId) return;
+    try {
+      const payload = {
+        rating: editForm.rating,
+        text: editForm.text
+      };
+      const res = await apiClient.post(`/api/testimonials/edit/${editingId}`, payload);
+      const updated = res.data;
+      
+      setTestimonials(prev => prev.map(t => {
+        if (t.id === editingId) {
+          return {
+            ...t,
+            rating: typeof updated.rating === 'string' ? parseFloat(updated.rating) : (updated.rating || editForm.rating),
+            text: updated.text ? (updated.text.startsWith('"') ? updated.text : `"${updated.text}"`) : `"${editForm.text}"`
+          };
+        }
+        return t;
+      }));
+      setEditingId(null);
+    } catch (error) {
+      console.error('Gagal mengupdate testimoni:', error);
+      alert('Gagal mengupdate ulasan Anda.');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus ulasan ini?')) return;
+    try {
+      await apiClient.post(`/api/testimonials/delete/${id}`);
+      setTestimonials(prev => prev.filter(t => t.id !== id));
+    } catch (error) {
+      console.error('Gagal menghapus testimoni:', error);
+      alert('Gagal menghapus ulasan.');
     }
   };
 
@@ -355,10 +397,23 @@ export default function Home() {
                          <div className="w-12 h-12 relative flex-shrink-0">
                            <Image fill src={t.avatar} alt="Avatar" className="rounded-full object-cover" />
                          </div>
-                         <div>
+                         <div className="flex-1">
                             <h4 className="font-bold font-headline text-on-surface">{t.name}</h4>
                             <p className="text-xs font-bold truncate max-w-[150px] text-on-surface-variant">{t.role}</p>
                          </div>
+                         {user && user.username === t.name && (
+                           <div className="flex gap-1">
+                             <button onClick={() => {
+                               setEditingId(t.id);
+                               setEditForm({ rating: t.rating, text: t.text.replace(/^"|"$/g, '') });
+                             }} className="p-2 bg-surface-container hover:bg-primary hover:text-white rounded-full text-slate-400 transition-all flex items-center justify-center" title="Edit">
+                               <span className="material-symbols-outlined text-[16px]">edit</span>
+                             </button>
+                             <button onClick={() => handleDelete(t.id)} className="p-2 bg-surface-container hover:bg-error hover:text-white rounded-full text-slate-400 transition-all flex items-center justify-center" title="Hapus">
+                               <span className="material-symbols-outlined text-[16px]">delete</span>
+                             </button>
+                           </div>
+                         )}
                       </div>
                    </div>
                  ))}
@@ -399,6 +454,39 @@ export default function Home() {
                          Masuk Sekarang
                        </Link>
                      </div>
+                   </div>
+                 </div>
+               )}
+
+               {/* Edit Form Modal */}
+               {editingId !== null && mounted && user && (
+                 <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+                   <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-300 relative">
+                     <button onClick={() => setEditingId(null)} className="absolute top-6 right-6 text-slate-400 hover:text-error transition-colors">
+                       <span className="material-symbols-outlined text-2xl">close</span>
+                     </button>
+                     <h3 className="font-headline text-2xl font-black text-on-surface mb-2">Edit Pengalaman Anda</h3>
+                     <p className="text-on-surface-variant mb-6 text-sm">Perbarui rating atau ulasan yang pernah Anda berikan.</p>
+
+                     <form onSubmit={handleEditSubmit} className="space-y-4">
+                       <div>
+                         <label className="block text-xs font-bold text-outline uppercase tracking-wide mb-2">Rating</label>
+                         <div className="flex gap-2">
+                           {[1,2,3,4,5].map(star => (
+                             <button type="button" key={star} onClick={() => setEditForm({...editForm, rating: star})} className={`material-symbols-outlined text-3xl transition-transform hover:scale-110 ${editForm.rating >= star ? 'text-tertiary' : 'text-slate-300'}`} style={{ fontVariationSettings: editForm.rating >= star ? "'FILL' 1" : "'FILL' 0" }}>
+                               star
+                             </button>
+                           ))}
+                         </div>
+                       </div>
+                       <div>
+                         <label className="block text-xs font-bold text-outline uppercase tracking-wide mb-2">Ulasan</label>
+                         <textarea required value={editForm.text} onChange={e => setEditForm({...editForm, text: e.target.value})} rows={3} className="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline-variant text-on-surface resize-none"></textarea>
+                       </div>
+                       <button type="submit" className="w-full bg-primary text-white font-black py-4 rounded-xl hover:bg-blue-700 active:scale-95 transition-all mt-4 shadow-lg shadow-primary/20">
+                         Simpan Perubahan
+                       </button>
+                     </form>
                    </div>
                  </div>
                )}
