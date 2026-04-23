@@ -66,11 +66,10 @@ export default function LoginPage() {
             <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/">Beranda</Link>
             <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/diagnosis">Diagnosis</Link>
             <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/clinic">Cari Klinik</Link>
+            <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/history">Riwayat</Link>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-95 duration-200">
-              <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">notifications</span>
-            </button>
+
             <Link href="/settings" className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-95 duration-200">
               <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">account_circle</span>
             </Link>

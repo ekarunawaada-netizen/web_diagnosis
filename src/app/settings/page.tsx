@@ -67,20 +67,12 @@ export default function SettingsPage() {
                  </div>
               </div>
               
-              <form onSubmit={handleProfileSave} className="space-y-10">
+              <div className="space-y-10">
                 {/* Avatar Section - Centered */}
                 <div className="flex flex-col items-center gap-4 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
-                  <div className="relative group">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleAvatarChange}
-                      accept="image/*"
-                      className="hidden"
-                    />
+                  <div className="relative">
                     <div 
-                      onClick={triggerFileInput}
-                      className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-primary/20 group-hover:scale-105 transition-transform duration-500 cursor-pointer overflow-hidden border-4 border-white"
+                      className="w-32 h-32 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-primary/20 overflow-hidden border-4 border-white"
                     >
                       <Image src={avatarUrl} alt="Avatar" width={128} height={128} className="w-full h-full object-cover" />
                     </div>
@@ -91,42 +83,35 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-6 max-w-xl mx-auto">
-                  <div className="group">
-                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2 group-focus-within:text-primary transition-colors">Nama Sesuai KTP</label>
+                  <div>
+                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2">Nama Sesuai KTP</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
                       <input
                         type="text"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-slate-50 pl-12 pr-5 py-4 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-slate-800 shadow-sm outline-none"
-                        required
+                        readOnly
+                        className="w-full bg-slate-50 pl-12 pr-5 py-4 rounded-xl border border-slate-200 font-bold text-slate-600 shadow-sm outline-none cursor-default"
                       />
                     </div>
                   </div>
                   
-                  <div className="group">
-                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2 group-focus-within:text-primary transition-colors">Nomor Telepon Seluler</label>
+                  <div>
+                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2">Nomor Telepon Seluler</label>
                     <div className="flex gap-3">
-                       <span className="bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl font-bold text-slate-400 flex items-center justify-center shadow-sm">
+                       <span className="bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl font-bold text-slate-400 flex items-center justify-center shadow-sm cursor-default">
                          <span className="material-symbols-outlined text-xl">call</span>
                        </span>
                        <input
                          type="tel"
                          value={phone}
-                         onChange={(e) => setPhone(e.target.value)}
-                         className="flex-grow bg-slate-50 px-5 py-4 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-slate-800 shadow-sm outline-none"
+                         readOnly
+                         className="flex-grow bg-slate-50 px-5 py-4 rounded-xl border border-slate-200 font-bold text-slate-600 shadow-sm outline-none cursor-default"
                        />
                     </div>
                   </div>
                 </div>
-
-                <div className="pt-6 border-t border-slate-100 flex justify-center">
-                  <button type="submit" className="px-12 py-4 bg-primary text-white rounded-2xl font-black shadow-[0_10px_30px_rgba(0,100,255,0.3)] hover:shadow-[0_15px_40px_rgba(0,100,255,0.45)] hover:-translate-y-1 active:scale-95 transition-all w-full sm:w-auto">
-                    Simpan Perubahan
-                  </button>
-                </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>
