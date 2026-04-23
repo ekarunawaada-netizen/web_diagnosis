@@ -3,11 +3,6 @@ import fs from "fs";
 import path from "path";
 
 try {
-  const src = "C:\\Users\\ekaru\\.gemini\\antigravity\\brain\\e12bbfdf-7c41-4b8f-a8f2-11e9eae46ded\\media__1776647980616.png";
-  const dest = path.join(process.cwd(), "public", "logo.png");
-  if (fs.existsSync(src)) {
-    fs.copyFileSync(src, dest);
-  }
 } catch (e) {}
 
 const BACKEND_URL = "https://db.hztapp.com/spakar";

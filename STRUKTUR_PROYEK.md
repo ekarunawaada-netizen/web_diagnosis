@@ -29,7 +29,15 @@ Direktori yang mengelola konfigurasi "mesin" platform secara keseluruhan.
 Folder ini merupakan pusat tempat berputarnya seluruh logika bisnis antarmuka (*frontend system*).
 
 ### 🛣️ `src/app/` (Router & Halaman Layar)
-Folder ini secara langsung mewakili *path* URL (rute) halaman yang dilihat oleh pengguna di perambannya.
+Folder ini secara langsung mewakili *path* URL (rute) halaman yang dilihat oleh pengguna di perambannya. Di dalam folder ini terdapat file krusial yang mengatur fondasi seluruh laman web, yaitu **`layout.tsx`**.
+
+#### 🏗️ Fungsi Utama File `layout.tsx` (Kerangka Meta Web)
+Jika Anda presentasi, sebut file `layout.tsx` ini sebagai **"Tulang Punggung Antarmuka Global"**. File ini adalah berkas yang pertama kali dimuat oleh kerangka Next.js sebelum merender halaman apapun (beranda, profil, dll). Tugas utamanya:
+1.  **Pengatur Metadata & SEO Pusat**: Menyuntikkan judul otomatis (seperti *"Petit Klinik - Diagnosis Interaktif"*) di setiap *tab browser* pengguna untuk optimasi Google Search (SEO).
+2.  **Injeksi Font & Desain Dasar**: Melakukan impor *Google Fonts* (seperti font *Manrope* dan *Inter*) dan `globals.css` secara absolut, sehingga tipografi/tulisan di seluruh sistem klinik Anda menjadi sinkron tanpa perlu dimuat ulang per halaman.
+3.  **Pelindung *Wrapper* Terluar**: File ini ibarat bungkus kado. Semua halaman yang Anda buat (misalnya `page.tsx` milik diagnosis) akan disisipkan di tengah-tengah parameter `{children}`. Karena elemen *Loading Bar* (`<PageLoader/>`), *Auth Provider* (`<Providers/>`), dan AI `<Chatbot/>` (Vitara) dideklarasikan di sini, maka elemen-elemen tersebut dipastikan akan selalu ada melayang dan ikut berpindah-pindah ke halaman manapun pasien bernavigasi, tanpa memuat memori berkali-kali!
+
+#### Daftar Rute Laman Lainnya:
 *   **`app/(Beranda) (page.tsx)`**: Tampilan awal (*Landing Page*) Petit Klinik yang responsif dan dirancang untuk menangani *fetching* data Testimoni dinamis dari Backend API secara *real-time*.
 *   **`app/diagnosis/`**: Rute utama untuk proses wawancara sistem pakar. Mengambil rentetan data gejala (*symptoms*) secara cerdas dengan memanggil *database* dan otomatis menyortir gejala teratas berdasarkan bobot nilai probabilitas kepastian (*Certainty Factor*).
 *   **`app/chat/`**: Sistem antarmuka *chat* khusus (layar penuh) untuk **Vitara** (Asisten AI terintegrasi Gemini tingkat lanjut).
@@ -62,6 +70,6 @@ Walaupun sebagian besar desain proyek diatur lewat kode sisipan `Tailwind CSS`, 
 ---
 
 > 💡 **Poin Argumen Kuat Utama Untuk Anda di Presentasi Nanti:**
-> *"Struktur platform web Petit Klinik kami secara ketat telah mengadopsi prinsip Modularitas standar industri terkemuka. Alih-alih mencampur aduk UI dan Logika, kami **memisahkan dengan jelas App Router** (untuk rendering antarmuka cepat) **dengan lapis Security Boundary Context dan Lib** (untuk otentikasi keamanan dan sambungan pertukaran data).*
+> *"Struktur platform web Petit Klinik kami secara ketat telah mengadopsi prinsip Modularitas standar ng aindustri terkemuka. Alih-alih mencampur aduk UI dan Logika, kami **memisahkan dengan jelas App Router** (untuk renderintarmuka cepat) **dengan lapis Security Boundary Context dan Lib** (untuk otentikasi keamanan dan sambungan pertukaran data).*
 > 
 > *Dampaknya? Ketika di masa depan tim kami membutuhkan pembaruan rumus sistem pakar AI atau pemugaran koneksi database, para spesialis IT dapat berfokus mengubah rute di folder fungsionalitas murninya secara terisolasi tanpa risiko menyebabkan seluruh sistem interaktif Frontend web ini *down* ataupun malfungsi desain."*
