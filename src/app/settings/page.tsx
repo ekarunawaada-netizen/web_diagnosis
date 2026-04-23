@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
@@ -12,32 +12,52 @@ export default function SettingsPage() {
   const router = useRouter();
   
   // Profile Form States
-  const [name, setName] = useState(user?.username || 'Pasien Petit Klinik');
-  const [phone, setPhone] = useState('+62 812 3456 7890');
+  const [username, setUsername] = useState('Memuat...');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('Memuat...');
   const [avatarUrl, setAvatarUrl] = useState('https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const apiClient = (await import('@/lib/axios')).default;
+        const res = await apiClient.get('/api/profile');
+        if (res.data?.success) {
+          setUsername(res.data.data.username || '');
+          setEmail(res.data.data.email || '');
+          setPhone(res.data.data.phone || '');
+        }
+      } catch (err) {
+        console.error('Gagal memuat profil', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setMessage({ text: '', type: '' });
+    try {
+      const apiClient = (await import('@/lib/axios')).default;
+      await apiClient.put('/api/profile', { email, phone });
+      setMessage({ text: 'Profil berhasil diperbarui!', type: 'success' });
+    } catch (err) {
+      console.error(err);
+      setMessage({ text: 'Gagal menyimpan perubahan.', type: 'error' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
 
-  const handleProfileSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Note: Profile update API not yet connected — this is a UI-only save
-    alert('Profil Anda telah disimpan secara lokal.');
-    router.refresh();
-  };
 
   return (
     <>
@@ -67,7 +87,7 @@ export default function SettingsPage() {
                  </div>
               </div>
               
-              <div className="space-y-10">
+              <form onSubmit={handleProfileSave} className="space-y-10">
                 {/* Avatar Section - Centered */}
                 <div className="flex flex-col items-center gap-4 bg-slate-50/50 p-8 rounded-[2rem] border border-slate-100 shadow-inner">
                   <div className="relative">
@@ -78,40 +98,69 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="text-center">
-                    <h3 className="font-black text-xl text-slate-800">{name}</h3>
+                    <h3 className="font-black text-xl text-slate-800">{username}</h3>
                   </div>
                 </div>
 
+                {message.text && (
+                  <div className={`p-4 rounded-xl text-center font-bold text-sm ${message.type === 'success' ? 'bg-green-50 text-green-600 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                    {message.text}
+                  </div>
+                )}
+
                 <div className="space-y-6 max-w-xl mx-auto">
                   <div>
-                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2">Nama Sesuai KTP</label>
+                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2">Username (Tidak dapat diubah)</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
                       <input
                         type="text"
-                        value={name}
+                        value={username}
                         readOnly
-                        className="w-full bg-slate-50 pl-12 pr-5 py-4 rounded-xl border border-slate-200 font-bold text-slate-600 shadow-sm outline-none cursor-default"
+                        disabled={isLoading}
+                        className="w-full bg-slate-100 pl-12 pr-5 py-4 rounded-xl border border-slate-200 font-bold text-slate-500 shadow-sm outline-none cursor-not-allowed"
                       />
                     </div>
                   </div>
                   
-                  <div>
-                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2">Nomor Telepon Seluler</label>
+                  <div className="group">
+                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2 group-focus-within:text-primary transition-colors">Nomor Telepon Seluler</label>
                     <div className="flex gap-3">
-                       <span className="bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl font-bold text-slate-400 flex items-center justify-center shadow-sm cursor-default">
+                       <span className="bg-slate-50 border border-slate-200 px-5 py-4 rounded-xl font-bold text-slate-400 flex items-center justify-center shadow-sm">
                          <span className="material-symbols-outlined text-xl">call</span>
                        </span>
                        <input
                          type="tel"
                          value={phone}
-                         readOnly
-                         className="flex-grow bg-slate-50 px-5 py-4 rounded-xl border border-slate-200 font-bold text-slate-600 shadow-sm outline-none cursor-default"
+                         onChange={(e) => setPhone(e.target.value)}
+                         disabled={isLoading}
+                         className="flex-grow bg-slate-50 px-5 py-4 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-slate-800 shadow-sm outline-none"
                        />
                     </div>
                   </div>
+
+                  <div className="group">
+                    <label className="block text-[11px] font-black font-label uppercase tracking-widest text-slate-400 mb-2 group-focus-within:text-primary transition-colors">Alamat Email</label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        className="w-full bg-slate-50 pl-12 pr-5 py-4 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-bold text-slate-800 shadow-sm outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+
+                <div className="pt-6 border-t border-slate-100 flex justify-center">
+                  <button type="submit" disabled={isSaving || isLoading} className="px-12 py-4 bg-primary text-white rounded-2xl font-black shadow-[0_10px_30px_rgba(0,100,255,0.3)] hover:shadow-[0_15px_40px_rgba(0,100,255,0.45)] hover:-translate-y-1 active:scale-95 transition-all w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed">
+                    {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
