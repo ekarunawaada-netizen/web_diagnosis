@@ -137,8 +137,8 @@ export default function LoginPage() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="peer sr-only"
                     />
-                    <div className="w-5 h-5 bg-surface-container-highest rounded-md border border-outline/20 peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
-                      <span className="material-symbols-outlined text-white text-[16px] scale-0 peer-checked:scale-100 transition-transform font-bold">check</span>
+                    <div className={`w-5 h-5 rounded-md border transition-all flex items-center justify-center ${rememberMe ? 'bg-primary border-primary' : 'bg-slate-100 border-slate-300'}`}>
+                      <span className={`material-symbols-outlined text-white text-[16px] transition-transform font-bold ${rememberMe ? 'scale-100' : 'scale-0'}`}>check</span>
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">Ingat Saya</span>

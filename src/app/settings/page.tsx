@@ -63,7 +63,7 @@ export default function SettingsPage() {
                  </div>
                  <div>
                     <h2 className="text-2xl font-black font-headline text-slate-800">Profil Saya</h2>
-                    <p className="text-slate-500 font-medium mt-1">Data ini membantu tenaga medis menyapa Anda dengan tepat.</p>
+                    <p className="text-slate-500 font-medium mt-1">Profil pribadi kamu.</p>
                  </div>
               </div>
               
