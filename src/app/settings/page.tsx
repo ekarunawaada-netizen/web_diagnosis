@@ -12,9 +12,9 @@ export default function SettingsPage() {
   const router = useRouter();
   
   // Profile Form States
-  const [name, setName] = useState(user?.username || 'Pasien MediScan');
+  const [name, setName] = useState(user?.username || 'Pasien Petit Klinik');
   const [phone, setPhone] = useState('+62 812 3456 7890');
-  const [avatarUrl, setAvatarUrl] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200');
+  const [avatarUrl, setAvatarUrl] = useState('https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,17 +84,9 @@ export default function SettingsPage() {
                     >
                       <Image src={avatarUrl} alt="Avatar" width={128} height={128} className="w-full h-full object-cover" />
                     </div>
-                    <button 
-                      type="button" 
-                      onClick={triggerFileInput}
-                      className="absolute bottom-1 right-1 bg-secondary text-white p-2.5 rounded-full shadow-lg hover:bg-secondary/90 transition-all active:scale-95 border-4 border-white group-hover:rotate-12"
-                    >
-                      <span className="material-symbols-outlined text-lg">photo_camera</span>
-                    </button>
                   </div>
                   <div className="text-center">
                     <h3 className="font-black text-xl text-slate-800">{name}</h3>
-                    <p className="text-blue-600 text-xs font-bold uppercase tracking-widest mt-1 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">Terverifikasi Publik</p>
                   </div>
                 </div>
 

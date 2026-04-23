@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import apiClient from '@/lib/axios';
 
 const initialTestimonials = [
   {
@@ -22,7 +23,7 @@ const initialTestimonials = [
     name: "Siti Aisyah",
     role: "Pegawai Negeri, Surabaya",
     rating: 5,
-    text: "\"PDF laporannya sangat dihormati oleh spesialis lambung saya. Mereka langsung paham anatomi keluhan yang dirunut oleh AI Petit Hospital. Tidak perlu tebak-tebakan dari nol lagi di meja praktek.\"",
+    text: "\"PDF laporannya sangat dihormati oleh spesialis lambung saya. Mereka langsung paham anatomi keluhan yang dirunut oleh AI Petit Klinik. Tidak perlu tebak-tebakan dari nol lagi di meja praktek.\"",
     avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80",
     isPrimary: false,
     transform: "md:-translate-y-6"
@@ -49,15 +50,31 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('user_testimonials');
-    if (saved) {
+    // Hapus data dummy kotor dari localStorage pengguna
+    localStorage.removeItem('user_testimonials');
+
+    const fetchTestimonials = async () => {
       try {
-        const parsedSaved = JSON.parse(saved);
-        setTestimonials([...initialTestimonials, ...parsedSaved]);
+        const res = await apiClient.get('/api/testimonials/all');
+        const data = res.data;
+        if (Array.isArray(data) && data.length > 0) {
+          const formatted = data.map(t => ({
+            id: t.id,
+            name: t.name,
+            role: t.role || 'Pengguna Petit Klinik',
+            rating: t.rating || 5,
+            text: `"${t.text}"`,
+            avatar: t.avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(t.name)}`,
+            isPrimary: false
+          }));
+          setTestimonials(prev => [...prev, ...formatted]);
+        }
       } catch (e) {
-        console.error('Error parsing testimonials', e);
+        console.error('Gagal mengambil data testimoni dari server', e);
       }
-    }
+    };
+
+    fetchTestimonials();
   }, []);
 
   const handleOpenForm = () => {
@@ -68,27 +85,39 @@ export default function Home() {
     setIsFormOpen(true);
   };
 
-  const handleTestimonialSubmit = (e: React.FormEvent) => {
+  const handleTestimonialSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !newTestimonial.text) return;
 
-    const added = {
-      id: Date.now(),
+    const payload = {
       name: user.username,
-      role: "Pengguna Petit Hospital",
+      role: "Pengguna Petit Klinik",
       rating: newTestimonial.rating,
-      text: `"${newTestimonial.text}"`,
-      avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.username)}`,
-      isPrimary: false
+      text: newTestimonial.text,
+      avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(user.username)}`
     };
 
-    setTestimonials((prev) => [...prev, added]);
-    
-    const saved = JSON.parse(localStorage.getItem('user_testimonials') || '[]');
-    localStorage.setItem('user_testimonials', JSON.stringify([...saved, added]));
-    
-    setIsFormOpen(false);
-    setNewTestimonial({ text: '', rating: 5 });
+    try {
+      const res = await apiClient.post('/api/testimonials/new', payload);
+      const added = res.data;
+      
+      const formattedAdded = {
+        id: added.id || Date.now(),
+        name: added.name,
+        role: added.role || "Pengguna Petit Klinik",
+        rating: added.rating || 5,
+        text: `"${added.text}"`,
+        avatar: added.avatar,
+        isPrimary: false
+      };
+
+      setTestimonials((prev) => [...prev, formattedAdded]);
+      setIsFormOpen(false);
+      setNewTestimonial({ text: '', rating: 5 });
+    } catch (error) {
+      console.error('Gagal mengirim testimoni:', error);
+      alert('Terjadi kesalahan saat mengirim ulasan Anda. Coba lagi nanti.');
+    }
   };
 
   return (
@@ -126,7 +155,7 @@ export default function Home() {
               </h1>
               
               <p className="text-xl text-on-surface-variant max-w-lg leading-relaxed font-medium">
-                Dapatkan analisis kesehatan secara cepat, akurat, dan mudah dipahami. Petit Hospital membantu mengubah gejala yang Anda alami menjadi informasi medis yang jelas dalam hitungan detik.
+                Dapatkan analisis kesehatan secara cepat, akurat, dan mudah dipahami. Petit Klinik membantu mengubah gejala yang Anda alami menjadi informasi medis yang jelas dalam hitungan detik.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-5 pt-6">
@@ -231,7 +260,7 @@ export default function Home() {
             <div className="text-center mb-16 md:mb-20 space-y-5">
               <span className="text-primary font-bold tracking-widest uppercase text-sm">Keunggulan Website kami </span>
               <h2 className="text-3xl md:text-5xl font-black font-headline tracking-tighter text-on-surface">Dirancang melampaui Aplikasi Biasa.</h2>
-              <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">Petit Hospital membantu Anda memahami kondisi kesehatan secara praktis, cepat, dan terpercaya.</p>
+              <p className="text-on-surface-variant text-xl max-w-2xl mx-auto font-medium">Petit Klinik membantu Anda memahami kondisi kesehatan secara praktis, cepat, dan terpercaya.</p>
             </div>
             
             {/* Bento Layout Grid */}
@@ -360,7 +389,7 @@ export default function Home() {
                        <span className="material-symbols-outlined text-4xl text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
                      </div>
                      <h3 className="font-headline text-2xl font-black text-on-surface mb-3">Login Diperlukan</h3>
-                     <p className="text-on-surface-variant mb-8 text-sm leading-relaxed">Anda harus masuk ke akun Petit Hospital terlebih dahulu sebelum dapat memberikan rating dan ulasan.</p>
+                     <p className="text-on-surface-variant mb-8 text-sm leading-relaxed">Anda harus masuk ke akun Petit Klinik terlebih dahulu sebelum dapat memberikan rating dan ulasan.</p>
                      <div className="flex gap-3">
                        <button onClick={() => setShowLoginPrompt(false)} className="flex-1 px-6 py-3.5 border-2 border-outline-variant/30 text-on-surface-variant font-bold rounded-xl hover:bg-surface-container transition-all active:scale-95">
                          Nanti Saja
@@ -382,7 +411,7 @@ export default function Home() {
                        <span className="material-symbols-outlined text-2xl">close</span>
                      </button>
                      <h3 className="font-headline text-2xl font-black text-on-surface mb-2">Tulis Pengalaman Anda</h3>
-                     <p className="text-on-surface-variant mb-6 text-sm">Bagaimana Petit Hospital membantu kesehatan Anda? Ceritakan di sini.</p>
+                     <p className="text-on-surface-variant mb-6 text-sm">Bagaimana Petit Klinik membantu kesehatan Anda? Ceritakan di sini.</p>
                      
                      {/* Show logged-in user info */}
                      <div className="flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant/20 rounded-xl mb-5">

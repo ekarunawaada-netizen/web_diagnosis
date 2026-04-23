@@ -57,36 +57,25 @@ export default function RegisterPage() {
           {/* Left Side: Visual/Editorial Branding */}
           <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-[#0061a4] to-[#2196f3] relative overflow-hidden">
             <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/logo.png" alt="Petit Hospital Logo" className="h-10 w-10 object-contain invert brightness-0" style={{ filter: "brightness(0) invert(1)" }} />
-                <h1 className="font-headline text-4xl font-extrabold tracking-tighter text-on-primary">Petit Hospital</h1>
+              <div className="flex items-center gap-4 mb-5">
+                <div className="h-12 w-12 bg-white rounded-xl shadow-md p-1.5 flex items-center justify-center">
+                  <img src="/logo.png" alt="Petit Klinik Logo" className="w-full h-full object-contain mix-blend-multiply" />
+                </div>
+                <h1 className="font-headline text-4xl font-extrabold tracking-tighter text-white">Petit Klinik</h1>
               </div>
-              <p className="text-on-primary/90 text-lg max-w-sm leading-relaxed">Precision diagnostics for a healthier tomorrow. Create your sanctuary for medical history and real-time monitoring.</p>
+              <p className="text-on-primary/90 text-lg max-w-sm leading-relaxed">Diagnosis akurat untuk kesehatan masa depan. Simpan riwayat medis Anda dengan aman dan pantau perkembangan secara langsung.</p>
             </div>
 
             <div className="relative z-10 space-y-8">
               <div className="bg-white/20 backdrop-blur-md p-6 rounded-xl max-w-xs border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
                   <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                  <span className="font-headline font-bold text-on-primary-container">HIPAA Compliant</span>
+                  <span className="font-headline font-bold text-on-primary-container">Standar Keamanan Medis</span>
                 </div>
-                <p className="text-on-surface-variant text-sm">Your medical data is encrypted with enterprise-grade security standards.</p>
+                <p className="text-on-surface-variant text-sm">Data medis Anda sepenuhnya dienkripsi dengan sistem keamanan tingkat perusahaan.</p>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex -space-x-3">
-                  <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                    <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjUHGtiWoqG5F3GwqH2gZUWlYIdGxPWe0pXc4pV9V7M5g-C4OYMJuwn8zWQkwkV_qTt1FvzKBNL-C_KP9jiXFuPfNSTUZvdCxl5Ja0tJOpSIgK6ppE4A19Qxd8ZyVJzemk8cuELvOjihnsPdsDlHEb5eZ0-lIv7piDUC4vNy91qiJ9KD89ZrdpgRZ-9WI2dW3xKK-Q8eGbtqS0OrgEqNlpB4mJ-dvPZyAnMH3wP96Kz9tM1tM8DvgnJb-B0XP4HrzvxkiJ6zqVk4sV" alt="professional female doctor" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                    <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVQqwCofQ6YiioGo6TxyvdotLamaBykjwk6zWrQPcL1Vp-q28-P5yX-6t2fbshBAP1Ccym4Y55URSuRpJXMwcGxIQoXPYaQZmsodTYb38ceJxp_7C9Fcbt4mHCNUCILrEwZiNEr0ZOWhf_AZ7txNQH6PMVcwVjWlvuJ5yGI34jPvn0XCrkBnf6-n3PYMNJs4VM24nD1yASa3JomvnqwyisZT1D60OXmI2wj0izkzTQvxvtRV8ytSA6bpQ4lJk4X0-FSWCwTgE5aXRU" alt="confident male doctor" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                    <img loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK9IsYTRfk2z_GDbULxeEXZBTNW_6o5_y6cbgxoG7ADoF0eo7FOUp90MSlw52xfax-r9YrixCQ-V-WNL9qcbBE15zz_9-gbcBin0eJjNv2xL3ysFFXQHAm1rQ-Innw74cscmG1vvzLS7N9bYMveX5VBGufYI6V05MF0VO2WInEAmwGP8Ktho2xWCXc2Hk7zYTrm-LsXTMqgREbFQkuAMw446HYZzsKIcGd3FyDI_cv3kHe1X4WTkzToTDmfz3a06s2Iyp-n1OeH6Pi" alt="female medical professional" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                <p className="text-on-primary text-sm font-medium">Join 50k+ patients &amp; clinicians</p>
-              </div>
+
             </div>
 
             {/* Abstract Decorative Elements */}
@@ -205,14 +194,14 @@ export default function RegisterPage() {
       <footer className="w-full border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto">
           <div className="mb-6 md:mb-0 text-center md:text-left">
-            <span className="font-manrope font-bold text-slate-900 dark:text-slate-100 text-lg block mb-2">Petit Hospital</span>
-            <p className="font-inter text-xs text-slate-500 dark:text-slate-400 max-w-xs">© 2024 Petit Hospital Diagnostics. All rights reserved.</p>
+            <span className="font-manrope font-bold text-slate-900 dark:text-slate-100 text-lg block mb-2">Petit Klinik</span>
+            <p className="font-inter text-xs text-slate-500 dark:text-slate-400 max-w-xs">© 2026 Petit Klinik. Hak Cipta Dilindungi.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">
-            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Privacy Policy</Link>
-            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Terms of Service</Link>
-            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">HIPAA Compliance</Link>
-            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Contact</Link>
+            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Kebijakan Privasi</Link>
+            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Syarat Ketentuan</Link>
+            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Keamanan Data</Link>
+            <Link href="#" className="font-inter text-xs text-slate-500 hover:text-blue-600 transition-colors">Bantuan</Link>
           </div>
         </div>
       </footer>

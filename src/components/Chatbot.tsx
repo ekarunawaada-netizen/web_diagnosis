@@ -6,6 +6,7 @@ import ChatWindow from './ChatWindow';
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasBeenOpened, setHasBeenOpened] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const [isHiddenByFooter, setIsHiddenByFooter] = useState(false);
@@ -25,9 +26,8 @@ export default function Chatbot() {
     return () => observer.disconnect();
   }, []);
 
-  // Jangan tampilkan tombol floating jika di halaman chat fullscreen atau halaman legal/bantuan
-  const hiddenPaths = ['/chat', '/privacy', '/terms', '/help'];
-  if (hiddenPaths.includes(pathname)) return null;
+  // Hanya tampilkan tombol floating di halaman utama (Beranda)
+  if (pathname !== '/') return null;
 
   const handleFullscreen = () => {
     setIsOpen(false);
@@ -49,9 +49,11 @@ export default function Chatbot() {
         </div>
       )}
 
-      {/* Floating Toggle Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setHasBeenOpened(true);
+        }}
         className={`w-16 h-16 rounded-full shadow-[0_10px_40px_rgba(0,0,0,0.2)] flex items-center justify-center transition-all duration-500 transform active:scale-90 ${
           isOpen ? 'bg-error text-white rotate-90 scale-90' : 'bg-gradient-to-br from-primary to-primary-container text-white hover:scale-110 hover:shadow-primary/40'
         }`}
@@ -59,7 +61,7 @@ export default function Chatbot() {
         <span className="material-symbols-outlined text-3xl transition-transform duration-300" style={{ fontVariationSettings: "'FILL' 1" }}>
           {isOpen ? 'close' : 'chat_bubble'}
         </span>
-        {!isOpen && (
+        {!isOpen && !hasBeenOpened && (
           <span className="absolute 0 top-0 right-0 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
         )}
       </button>

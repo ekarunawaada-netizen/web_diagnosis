@@ -59,8 +59,8 @@ export default function LoginPage() {
       <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm dark:shadow-none">
         <div className="flex justify-between items-center px-6 py-4 max-w-[1440px] mx-auto">
           <Link href="/" className="text-2xl font-bold font-headline flex items-center gap-2">
-            <img src="/logo.png" alt="Petit Hospital Logo" className="h-8 w-8 object-contain" />
-            <span className="bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent">Petit Hospital</span>
+            <img src="/logo.png" alt="Petit Klinik Logo" className="h-8 w-8 object-contain" />
+            <span className="bg-gradient-to-br from-blue-700 to-blue-500 bg-clip-text text-transparent">Petit Klinik</span>
           </Link>
           <div className="hidden md:flex items-center gap-8 font-headline font-semibold tracking-tight">
             <Link className="text-slate-600 dark:text-slate-400 hover:text-blue-500 transition-colors" href="/">Beranda</Link>
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <label className="block font-label text-xs font-bold tracking-widest text-slate-500 uppercase px-1">USERNAME / EMAIL</label>
+                <label className="block font-label text-xs font-bold tracking-widest text-slate-500 uppercase px-1">NAMA PENGGUNA / EMAIL</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -106,14 +106,14 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-5 py-4 bg-surface-container-highest border-none rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-on-surface placeholder:text-outline/60"
-                    placeholder="Username/Email"
+                    placeholder="Nama Pengguna/Email"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="block font-label text-xs font-bold tracking-widest text-slate-500 uppercase px-1">PASSWORD</label>
+                  <label className="block font-label text-xs font-bold tracking-widest text-slate-500 uppercase px-1">KATA SANDI</label>
                   <a href="#" className="text-xs font-semibold text-primary hover:text-on-primary-fixed-variant transition-colors">Lupa Kata Sandi?</a>
                 </div>
                 <div className="relative">
@@ -165,12 +165,12 @@ export default function LoginPage() {
       {/* Footer */}
       <footer className="w-full py-8 mt-auto bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 gap-4 max-w-[1440px] mx-auto">
-          <p className="font-['Inter'] text-xs uppercase tracking-widest text-slate-400">© 2024 Petit Hospital Diagnosis Platform. Hak Cipta Dilindungi.</p>
+          <p className="font-['Inter'] text-xs uppercase tracking-widest text-slate-400">© 2026 Petit Klinik. Hak Cipta Dilindungi.</p>
           <div className="flex gap-6">
             <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Kebijakan Privasi</Link>
-            <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Syarat & Ketentuan</Link>
+            <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Syarat Ketentuan</Link>
+            <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Keamanan Data</Link>
             <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Bantuan</Link>
-            <Link href="#" className="font-['Inter'] text-xs uppercase tracking-widest text-slate-500 hover:text-blue-500 hover:underline underline-offset-4 transition-opacity duration-300">Karir</Link>
           </div>
         </div>
       </footer>

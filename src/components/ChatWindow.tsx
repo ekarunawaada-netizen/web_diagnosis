@@ -33,7 +33,7 @@ const STREAM_URL = 'https://db.hztapp.com/spakar/api/chat/stream';
  * sebelum history percakapan.
  */
 const VITARA_SYSTEM_PROMPT = `
-PENTING: Nama Anda adalah VITARA (Virtual Health Assistant Petit Hospital).
+PENTING: Nama Anda adalah VITARA (Virtual Health Assistant Petit Klinik).
 Anda adalah sahabat kesehatan yang asyik, modern, cerdas, dan empatik.
 
 GAYA PENULISAN (WAJIB):
@@ -315,7 +315,7 @@ export default function ChatWindow({ mode, onClose, onFullscreen }: ChatWindowPr
               <div className="space-y-1">
                 <h4 className="font-bold text-xl text-on-surface">Halo! Saya Vitara</h4>
                 <p className="text-sm text-on-surface-variant max-w-[260px] mx-auto">
-                  Asisten kesehatan AI Petit Hospital. Tanyakan gejala, tips sehat, atau apa pun!
+                  Asisten kesehatan AI Petit Klinik. Tanyakan gejala, tips sehat, atau apa pun!
                 </p>
               </div>
               {/* Quick prompts */}
